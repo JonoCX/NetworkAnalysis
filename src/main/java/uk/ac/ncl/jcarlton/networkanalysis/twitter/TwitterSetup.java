@@ -6,7 +6,9 @@ import twitter4j.conf.ConfigurationBuilder;
 import uk.ac.ncl.jcarlton.networkanalysis.util.Utility;
 
 /**
- * Created by jonathan on 16/08/2016.
+ * Provide an authenticated instance of Twitter
+ *
+ * @author Jonathan Carlton
  */
 public class TwitterSetup {
 

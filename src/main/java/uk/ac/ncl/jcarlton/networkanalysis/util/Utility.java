@@ -5,16 +5,20 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 /**
- * Created by jonathan on 16/08/2016.
+ * @author Jonathan Carlton
  */
 public class Utility {
 
     public Utility(){}
 
+    /**
+     * @param fileName
+     * @param arrSize
+     * @return
+     */
     public String[] getTokens(String fileName, int arrSize) {
         String[] result = new String[arrSize];
 
-        ClassLoader loader = this.getClass().getClassLoader();
         File file = new File(getClass().getResource("/access-codes/" + fileName).getFile());
 
         int i = 0;

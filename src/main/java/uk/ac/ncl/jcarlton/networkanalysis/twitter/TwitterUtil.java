@@ -12,12 +12,14 @@ import java.util.List;
  * Created by jonathan on 16/08/2016.
  */
 public class TwitterUtil {
+
     private Twitter twitterInstance;
     private String userName;
     private long userId;
 
-    public TwitterUtil() {}
-
+    /**
+     *
+     */
     public static class Builder {
         private Twitter twitterInstance;
         private String userName = null;
@@ -48,11 +50,20 @@ public class TwitterUtil {
         this.userId = builder.userId;
     }
 
+    /**
+     * @param max
+     * @return
+     */
     public List<String> getTweets(int max) {
         List<String> list = new ArrayList<>();
         Paging paging = new Paging(1, max);
         try {
-            List<Status> statuses = twitterInstance.getUserTimeline(userName == null ? userId : userId, paging);
+            List<Status> statuses;
+            if (userName == null)
+                statuses = twitterInstance.getUserTimeline(userId, paging);
+            else
+                statuses = twitterInstance.getUserTimeline(userName, paging);
+
             for (Status s : statuses)
                 list.add(s.getText());
         } catch (TwitterException e) {
