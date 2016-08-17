@@ -17,6 +17,6 @@ public interface LinkAnalysis {
     Map<Long, Boolean> checkForLinksFriends(List<Long> users) throws TwitterException;
 
     // unsure on the type to return.
-    void recentActivity(List<Long> users, Date since);
+    Map<Long, Boolean> recentActivity(List<Long> users, Date since);
 
 }
