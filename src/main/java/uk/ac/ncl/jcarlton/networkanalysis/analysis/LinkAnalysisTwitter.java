@@ -4,6 +4,7 @@ import twitter4j.IDs;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,13 +14,13 @@ import java.util.Map;
  *  set.
  *
  *  Both the users that the given user is following {@link #checkForLinksFollowing(List)}
- *  and the users that are following (friends) the given user {@link #checkForLinksFriend(List)}
+ *  and the users that are following (friends) the given user {@link #checkForLinksFriends(List)}
  *  are processed for consumption.
  *
  *  @author Jonathan Carlton
  *  @version 1.0
  */
-public class LinkAnalysisTwitter {
+public class LinkAnalysisTwitter implements LinkAnalysis {
 
     private long userId;
     private String username;
@@ -62,6 +63,7 @@ public class LinkAnalysisTwitter {
      * @return                  id mapped too true if there is a link, false if not
      * @throws TwitterException passed from the {@link #getFollowers()} method
      */
+    @Override
     public Map<Long, Boolean> checkForLinksFollowing(List<Long> users) throws TwitterException {
         Map<Long, Boolean> result = new HashMap<>();
 
@@ -83,7 +85,7 @@ public class LinkAnalysisTwitter {
      * @return                  the IDs of the followers.
      * @throws TwitterException passed from the {@link #twitterInstance} API.
      */
-    public IDs getFollowers() throws TwitterException {
+    private IDs getFollowers() throws TwitterException {
         IDs ids;
         long cursor = -1;
 
@@ -109,7 +111,8 @@ public class LinkAnalysisTwitter {
      * @return                  id mapped too true if there is a link, false if not
      * @throws TwitterException passed from the {@link #getFriends()} method
      */
-    public Map<Long, Boolean> checkForLinksFriend(List<Long> users) throws TwitterException {
+    @Override
+    public Map<Long, Boolean> checkForLinksFriends(List<Long> users) throws TwitterException {
         Map<Long, Boolean> result = new HashMap<>();
         for (long l : users)
             result.put(l, false);
@@ -129,7 +132,7 @@ public class LinkAnalysisTwitter {
      * @return                      ids of the friends.
      * @throws TwitterException     passed from the {@link #twitterInstance} API.
      */
-    public IDs getFriends() throws TwitterException {
+    private IDs getFriends() throws TwitterException {
         IDs ids;
         long cursor = -1;
 
@@ -143,4 +146,15 @@ public class LinkAnalysisTwitter {
         return ids;
     }
 
+    /**
+     * Look at the favourites and re-tweets of the user. Check to see if they've
+     * interacted with the static users - favourite a recent tweet or re-tweeted
+     * a recent tweet.
+     */
+
+
+    @Override
+    public void recentActivity(List<Long> users, Date since) {
+
+    }
 }
