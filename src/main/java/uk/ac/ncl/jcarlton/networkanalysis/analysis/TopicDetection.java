@@ -12,8 +12,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,25 +25,42 @@ import java.util.Map;
  * Learn server.
  *
  * @author Jonathan Carlton
+ * @version 1.0
  */
 public class TopicDetection {
 
     private String apiKey;
-    private String[] feed;
+    private List<String> feed;
 
     private static final String MONKEY_LEARN_BASE_URL = "https://api.monkeylearn.com/v2/classifiers/cl_5icAVzKR/classify/";
     private static final String URL_REGEX = "((www\\.[\\s]+)|(https?://[^\\s]+))";
     private static final String USERNAME_REGEX = "(@[A-Za-z0-9])\\w+";
     private static final String REPEATING_CHARS = "(.)\\1{3,}";
 
-    public TopicDetection(String[] feed) {
+
+    private Utility utility;
+
+    /**
+     * Object constructor.
+     *
+     * @param feed  the list of strings to be
+     *              used in the topic detection
+     *              process.
+     */
+    public TopicDetection(List<String> feed) {
+        setup();
+
         // pre-process the feed on object creation.
         this.feed = preprocessFeed(feed);
-        setup();
     }
 
+    /**
+     * Setup the elements of the object
+     */
     private void setup() {
-        Utility utility = new Utility();
+        utility = new Utility();
+
+        // fetch the monkey learn api key
         String[] arr = utility.getTokens("monkeylearn", 1);
         apiKey = arr[0];
     }
@@ -60,24 +78,20 @@ public class TopicDetection {
      * entire contents of the string all together.
      * <pre>{@code string.isEmpty()}</pre>
      *
-     * @param arr array of strings to be processed.
-     * @return a new array of processed strings.
+     * @param list   array of strings to be processed.
+     * @return      a new array of processed strings.
      */
-    public String[] preprocessFeed(String[] arr) {
-        String[] result = new String[arr.length];
-        for (int i = 0; i < arr.length; i++) {
-            String current = arr[i];
-
-            // remove all hyperlinks
+    private List<String> preprocessFeed(List<String> list) {
+        List<String> result = new ArrayList<>();
+        for (String current : list) {
             current = current.replaceAll(URL_REGEX, "");
 
-            // remove all username's
             current = current.replaceAll(USERNAME_REGEX, "");
 
-            // remove repeating characters and replace with single character
             current = current.replaceAll(REPEATING_CHARS, "$1");
 
-            result[i] = current;
+            if (utility.isWhitespace(current) || current.isEmpty()) continue;
+            else result.add(current);
         }
         return result;
     }
@@ -114,7 +128,7 @@ public class TopicDetection {
             OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
             JSONObject jsonObject = new JSONObject();
             JSONArray jsonArray = new JSONArray();
-            jsonArray.addAll(Arrays.asList(feed));
+            jsonArray.addAll(feed);
             jsonObject.put("text_list", jsonArray);
             writer.write(jsonObject.toJSONString());
             writer.flush();
@@ -159,7 +173,7 @@ public class TopicDetection {
             JSONArray resultArr = (JSONArray) parsedObject.get("result");
 
             for (int i = 0; i < resultArr.size(); i++)
-                result.put(feed[i], (JSONArray) resultArr.get(i));
+                result.put(feed.get(i), (JSONArray) resultArr.get(i));
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -168,4 +182,7 @@ public class TopicDetection {
         return result;
     }
 
+    public List<String> getFeed() {
+        return feed;
+    }
 }

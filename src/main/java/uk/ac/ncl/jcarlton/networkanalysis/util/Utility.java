@@ -5,7 +5,12 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 /**
+ * Utility class that provides handy methods that
+ * can/could be used across the scope of the
+ * project.
+ *
  * @author Jonathan Carlton
+ * @version 1.0
  */
 public class Utility {
 
@@ -34,5 +39,20 @@ public class Utility {
         }
 
         return result;
+    }
+
+    /**
+     *
+     * @param str
+     * @return
+     */
+    public boolean isWhitespace(String str) {
+        if (str == null) return false;
+
+        for (int i = 0; i < str.length(); i++) {
+            if ((!Character.isWhitespace(str.charAt(i))))
+                return false;
+        }
+        return true;
     }
 }
