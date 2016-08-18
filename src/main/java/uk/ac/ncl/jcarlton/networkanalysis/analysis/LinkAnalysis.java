@@ -1,7 +1,5 @@
 package uk.ac.ncl.jcarlton.networkanalysis.analysis;
 
-import twitter4j.TwitterException;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -12,9 +10,18 @@ import java.util.Map;
  */
 public interface LinkAnalysis {
 
-    Map<Long, Boolean> checkForLinksFollowing(List<Long> users) throws TwitterException;
+    /**
+     * @param users
+     * @return
+     */
+    Map<Long, Boolean> checkForLinksFollowing(List<Long> users);
 
-    Map<Long, Boolean> checkForLinksFriends(List<Long> users) throws TwitterException;
+    /**
+     *
+     * @param users
+     * @return
+     */
+    Map<Long, Boolean> checkForLinksFriends(List<Long> users);
 
     // unsure on the type to return.
     Map<Long, Boolean> recentActivity(List<Long> users, Date since);

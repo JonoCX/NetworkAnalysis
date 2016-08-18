@@ -2,10 +2,7 @@ package uk.ac.ncl.jcarlton.networkanalysis.analysis;
 
 import twitter4j.*;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Perform link analysis on a Twitter based data
@@ -59,20 +56,21 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      *
      * @param users list of user ids (longs)
      * @return id mapped too true if there is a link, false if not
-     * @throws TwitterException passed from the {@link #getFollowers()} method
      */
     @Override
-    public Map<Long, Boolean> checkForLinksFollowing(List<Long> users) throws TwitterException {
+    public Map<Long, Boolean> checkForLinksFollowing(List<Long> users) {
         Map<Long, Boolean> result = new HashMap<>();
+        try {
+            for (long l : users)
+                result.put(l, false);
 
-        for (long l : users)
-            result.put(l, false);
-
-        IDs ids = getFollowers();
-        for (long anId : ids.getIDs())
-            if (users.contains(anId))
-                result.put(anId, true);
-
+            IDs ids = getFollowers();
+            for (long anId : ids.getIDs())
+                if (users.contains(anId))
+                    result.put(anId, true);
+        } catch (TwitterException e) {
+            e.printStackTrace();
+        }
         return result;
     }
 
@@ -107,19 +105,21 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      *
      * @param users list of user ids (long)
      * @return id mapped too true if there is a link, false if not
-     * @throws TwitterException passed from the {@link #getFriends()} method
      */
     @Override
-    public Map<Long, Boolean> checkForLinksFriends(List<Long> users) throws TwitterException {
+    public Map<Long, Boolean> checkForLinksFriends(List<Long> users) {
         Map<Long, Boolean> result = new HashMap<>();
-        for (long l : users)
-            result.put(l, false);
+        try {
+            for (long l : users)
+                result.put(l, false);
 
-        IDs ids = getFriends();
-        for (long anId : ids.getIDs())
-            if (users.contains(anId))
-                result.put(anId, true);
-
+            IDs ids = getFriends();
+            for (long anId : ids.getIDs())
+                if (users.contains(anId))
+                    result.put(anId, true);
+        } catch (TwitterException e) {
+            e.printStackTrace();
+        }
         return result;
     }
 
@@ -176,11 +176,22 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             // add the users into map initially and gather the retweets for each
             for (Long l : users) {
                 result.put(l, false);
-                retweetsPerUser.put(l, getRetweets(l, since));
+                List<Status> retweets = getRetweets(l, since);
+                if (retweets != null)
+                    retweetsPerUser.put(l, retweets);
             }
 
             // fetch the favourites
             favourites = getFavourites(since);
+
+            // check that there are actually some favourites (recently)
+            for (Status fav : favourites) {
+                // if the given users appear in the recent favourites, then the
+                // give user has interacted with one of the users.
+                if (users.contains(fav.getUser().getId())) {
+
+                }
+            }
 
             // TODO finish the implementation of this method and test the others below it.
         } catch (TwitterException | IndexOutOfBoundsException e) {
@@ -195,27 +206,36 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @return
      * @throws TwitterException
      */
-    private List<Status> getFavourites(Date since) throws TwitterException {
-        List<Status> result;
+    public List<Status> getFavourites(Date since) throws TwitterException {
+        List<Status> result = new ArrayList<>();
         Paging paging = new Paging(1);
+        List<Status> temp;
         outerloop:
         do {
             if (userId == 0)
-                result = twitterInstance.getFavorites(username, paging);
+                temp = twitterInstance.getFavorites(username, paging);
             else
-                result = twitterInstance.getFavorites(userId, paging);
+                temp = twitterInstance.getFavorites(userId, paging);
 
-            for (Status s : result) {
-                if (since.before(s.getCreatedAt()))
-                    break outerloop;
+            for (Status s : temp) {
+                if ((s.getCreatedAt()).after(since)) {
+                    System.out.println(s.getUser().getScreenName() + " : " + s.getUser().getId());
+                    result.add(s);
+                }
             }
 
+            temp.clear();
             paging.setPage(paging.getPage() + 1);
-        } while (result.size() > 0);
+        } while (temp.size() > 0);
+
         return result;
     }
 
     /**
+     * Think about whether this is actually needed, it would
+     * be handy for the analysis but is problematic.
+     *
+     *
      * Only able to get the first 100 retweets of any tweet due
      * to Twitter API limitations.
      *
@@ -224,12 +244,14 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @return
      * @throws TwitterException
      */
-    private List<Status> getRetweets(long userId, Date since) throws TwitterException {
+    public List<Status> getRetweets(long userId, Date since) throws TwitterException {
         List<Status> tweets = getTweets(userId, since, 200);
         List<Status> retweets = null;
         if (tweets != null) {
+            Paging paging = new Paging(1);
             for (Status s : tweets) {
                 retweets = twitterInstance.getRetweets(s.getId());
+                paging.setPage(paging.getPage() + 1);
             }
             return retweets;
         }

@@ -72,4 +72,8 @@ public class TwitterUtil {
         return list;
     }
 
+    private void getUserId(String username) {
+
+    }
+
  }
