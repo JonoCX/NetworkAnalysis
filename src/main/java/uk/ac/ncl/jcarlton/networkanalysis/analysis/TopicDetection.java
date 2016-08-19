@@ -101,8 +101,16 @@ public class TopicDetection {
      *
      * @return string -> [{label, probability}, {label, probability}]
      */
-    public Map<String, JSONArray> detectTopics() {
-        return requestTopics();
+    public Map<String, JSONArray> detectTopicsAll() {
+        return requestTopics("");
+    }
+
+    public JSONArray detectTopicSingular(String text) {
+        Map<String, JSONArray> request = requestTopics(text);
+        JSONArray result = new JSONArray();
+        for (Map.Entry<String, JSONArray> m : request.entrySet())
+            result = m.getValue();
+        return result;
     }
 
     /**
@@ -110,7 +118,7 @@ public class TopicDetection {
      * to the Monkey Learn servers
      * @return string -> [{label, probability}, {label, probability}]
      */
-    private Map<String, JSONArray> requestTopics() {
+    private Map<String, JSONArray> requestTopics(String text) {
         StringBuilder builder = new StringBuilder();
         try {
             URL url = new URL(MONKEY_LEARN_BASE_URL);
@@ -128,7 +136,10 @@ public class TopicDetection {
             OutputStreamWriter writer = new OutputStreamWriter(connection.getOutputStream());
             JSONObject jsonObject = new JSONObject();
             JSONArray jsonArray = new JSONArray();
-            jsonArray.addAll(feed);
+            if (text.isEmpty())
+                jsonArray.addAll(feed);
+            else
+                jsonArray.add(text);
             jsonObject.put("text_list", jsonArray);
             writer.write(jsonObject.toJSONString());
             writer.flush();

@@ -1,5 +1,7 @@
 package uk.ac.ncl.jcarlton.networkanalysis.analysis;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import twitter4j.*;
 
 import java.util.*;
@@ -123,6 +125,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         return result;
     }
 
+
     /**
      * Fetch the friends of a given user (passed when the
      * object was created).
@@ -163,35 +166,44 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * <p>
      * return a map, similiar to above to see if they've interacted
      * with any of the users since the date?
+     *
+     * Structure of the recent activity?
+     * JSONObject?
+     *
+     * {
+     *     "user_id":
+     *     {
+     *         "activity_date":
+     *         {
+     *          "user_id":
+     *          "current_date":
+     *          "date_last_checked":
+     *          "tweets_liked": [ {"tweet_text": , "tweet_topic":, "id_of_creator" :, "tweet_id":} ]
+     *          "timeline_since_last_checked": [ ]
+     *          "topics_posted": [ *ordered by most frequent* ]
+     *          "static_users_interacted_with": [ {"user_id":, "method": favourite/re-tweet, "when":} ]
+     *         }
+     *     }
+     * }
+     *
      */
 
 
     @Override
-    public Map<Long, Boolean> recentActivity(List<Long> users, Date since) {
-        Map<Long, Boolean> result = new HashMap<>();
+    public JSONObject recentActivity(List<Long> users, Date since)  {
+        JSONObject result = new JSONObject();
         Map<Long, List<Status>> retweetsPerUser = new HashMap<>();
-        List<Status> favourites;
+
 
         try {
-            // add the users into map initially and gather the retweets for each
-            for (Long l : users) {
-                result.put(l, false);
-                List<Status> retweets = getRetweets(l, since);
-                if (retweets != null)
-                    retweetsPerUser.put(l, retweets);
-            }
 
-            // fetch the favourites
-            favourites = getFavourites(since);
+            Map<String,JSONArray> favourite = processFavouritesInteractions(users, since);
+
+            // add the users into map initially and gather the retweets for each
+
+
 
             // check that there are actually some favourites (recently)
-            for (Status fav : favourites) {
-                // if the given users appear in the recent favourites, then the
-                // give user has interacted with one of the users.
-                if (users.contains(fav.getUser().getId())) {
-
-                }
-            }
 
             // TODO finish the implementation of this method and test the others below it.
         } catch (TwitterException | IndexOutOfBoundsException e) {
@@ -201,12 +213,62 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         return result;
     }
 
+    // "tweets_liked": [ {"tweet_text": , "tweet_topic":, "id_of_creator" :, "tweet_id":} ]
+    // "static_users_interacted_with": [ {"user_id":, "method": favourite/re-tweet, "when":} ]
+    private Map<String, JSONArray> processFavouritesInteractions(List<Long> users, Date since) {
+        TopicDetection detection = new TopicDetection(new LinkedList<String>());
+        Map<String, JSONArray> result = new HashMap<>();
+        JSONArray tweetsLiked = new JSONArray();
+        JSONArray interactions = new JSONArray();
+        try {
+            List<Status> favourites = getFavourites(since);
+            JSONObject tweetsLikedObj = new JSONObject();
+            JSONObject usersInteracted = new JSONObject();
+            for (Status s : favourites) {
+
+                // process topics
+                JSONArray topic = detection.detectTopicSingular(s.getText());
+                double probability = 0.0;
+                String label = "";
+                for (Object t : topic) {
+                    JSONObject obj = (JSONObject) t;
+                    if (probability < (double) obj.get("probability")) {
+                        probability = (double) obj.get("probability");
+                        label = (String) obj.get("label");
+                    }
+                }
+
+                tweetsLikedObj.put("tweet_text", s.getText());
+                tweetsLikedObj.put("tweet_topic_label", label);
+                tweetsLikedObj.put("tweet_topic_probability", probability);
+                tweetsLikedObj.put("creator_id", s.getUser().getId());
+                tweetsLikedObj.put("tweet_id", s.getId());
+                tweetsLiked.add(tweetsLikedObj);
+                tweetsLikedObj = new JSONObject();
+
+                if (users.contains(s.getUser().getId())) {
+                    usersInteracted.put("user_id", s.getUser().getId());
+                    usersInteracted.put("method", "favourite");
+                    usersInteracted.put("tweet_created", s.getCreatedAt());
+                    interactions.add(usersInteracted);
+                    usersInteracted = new JSONObject();
+                }
+            }
+            result.put("tweets_liked", tweetsLiked);
+            result.put("static_users_interacted_with", interactions);
+
+        } catch (TwitterException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
     /**
      * @param since
      * @return
      * @throws TwitterException
      */
-    public List<Status> getFavourites(Date since) throws TwitterException {
+    private List<Status> getFavourites(Date since) throws TwitterException {
         List<Status> result = new ArrayList<>();
         Paging paging = new Paging(1);
         List<Status> temp;
@@ -278,5 +340,9 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             e.printStackTrace();
         }
         return list;
+    }
+
+    private JSONObject packageJSON() {
+        return new JSONObject();
     }
 }
