@@ -215,6 +215,12 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
 
     // "tweets_liked": [ {"tweet_text": , "tweet_topic":, "id_of_creator" :, "tweet_id":} ]
     // "static_users_interacted_with": [ {"user_id":, "method": favourite/re-tweet, "when":} ]
+
+    /**
+     * @param users
+     * @param since
+     * @return
+     */
     private Map<String, JSONArray> processFavouritesInteractions(List<Long> users, Date since) {
         TopicDetection detection = new TopicDetection(new LinkedList<String>());
         Map<String, JSONArray> result = new HashMap<>();
