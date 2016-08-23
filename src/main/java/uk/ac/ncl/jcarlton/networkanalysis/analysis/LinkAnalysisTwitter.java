@@ -3,7 +3,9 @@ package uk.ac.ncl.jcarlton.networkanalysis.analysis;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import twitter4j.*;
+import uk.ac.ncl.jcarlton.networkanalysis.util.MapSorter;
 
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -18,6 +20,11 @@ import java.util.*;
  * @version 1.0
  */
 public class LinkAnalysisTwitter implements LinkAnalysis {
+
+    // static users that are keys in the network
+    private static final long STATIC_USER_ONE = 76805343207060275L;
+    private static final long STATIC_USER_TWO = 768054311054151680L;
+    private static final long STATIC_USER_THREE = 768058443362107392L;
 
     private long userId;
     private String username;
@@ -166,50 +173,64 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * <p>
      * return a map, similiar to above to see if they've interacted
      * with any of the users since the date?
-     *
+     * <p>
      * Structure of the recent activity?
      * JSONObject?
-     *
+     * <p>
      * {
-     *     "user_id":
-     *     {
-     *         "activity_date":
-     *         {
-     *          "user_id":
-     *          "current_date":
-     *          "date_last_checked":
-     *          "tweets_liked": [ {"tweet_text": , "tweet_topic":, "id_of_creator" :, "tweet_id":} ]
-     *          "timeline_since_last_checked": [ ]
-     *          "topics_posted": [ *ordered by most frequent* ]
-     *          "static_users_interacted_with": [ {"user_id":, "method": favourite/re-tweet, "when":} ]
-     *         }
-     *     }
+     *      "user_id":
+     *       {
+     *          "activity_date":
+     *          {
+     *              "user_id":
+     *              "current_date":
+     *              "last_checked":
+     *              "tweets_liked": [ {"tweet_text": , "tweet_topic":, "id_of_creator" :, "tweet_id":} ]
+     *              "timeline_since_last_checked": [ ]
+     *              "topics_posted": [ {topic:, frequency:}*ordered by most frequent* ]
+     *              "static_users_interacted_with": [ {"user_id":, "method": favourite/re-tweet, "when":} ]
+     *          }
+     *      }
      * }
-     *
      */
 
 
     @Override
-    public JSONObject recentActivity(List<Long> users, Date since)  {
+    public JSONObject recentActivity(List<Long> users, Date since) {
         JSONObject result = new JSONObject();
         Map<Long, List<Status>> retweetsPerUser = new HashMap<>();
 
 
-        try {
+        String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime());
+        String lastChecked = new SimpleDateFormat("dd/MM/yyyy").format(since);
 
-            Map<String,JSONArray> favourite = processFavouritesInteractions(users, since);
+        Map<String, JSONArray> favourites = processFavouritesInteractions(users, since);
+        JSONArray tweetsLiked = favourites.get("tweets_liked");
+        JSONArray staticUsers = favourites.get("static_users_interacted_with");
+        List<Status> timelineSince = getTweets(userId, since);
 
-            // add the users into map initially and gather the retweets for each
+
+        return result;
+    }
+
+    public JSONArray topicsPosted(List<String> feed) {
+        TopicDetection detection = new TopicDetection(feed);
+        Map<String, JSONArray> response = detection.detectTopicsAll();
+
+        JSONArray result = new JSONArray();
+
+        Map<String, Integer> countMap = new HashMap<>();
+        for (Map.Entry<String, JSONArray> m : response.entrySet()) {
+            JSONArray current = m.getValue();
+            for (int i = 0; i < current.size(); i++) {
+                JSONObject inner = (JSONObject) current.get(i);
 
 
-
-            // check that there are actually some favourites (recently)
-
-            // TODO finish the implementation of this method and test the others below it.
-        } catch (TwitterException | IndexOutOfBoundsException e) {
-            e.printStackTrace();
+            }
         }
 
+        Map<String, Integer> sortedMap = MapSorter.valueDescending(countMap);
+        System.out.println(sortedMap);
         return result;
     }
 
@@ -302,8 +323,8 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     /**
      * Think about whether this is actually needed, it would
      * be handy for the analysis but is problematic.
-     *
-     *
+     * <p>
+     * <p>
      * Only able to get the first 100 retweets of any tweet due
      * to Twitter API limitations.
      *
@@ -313,7 +334,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @throws TwitterException
      */
     public List<Status> getRetweets(long userId, Date since) throws TwitterException {
-        List<Status> tweets = getTweets(userId, since, 200);
+        List<Status> tweets = getTweets(userId, since);
         List<Status> retweets = null;
         if (tweets != null) {
             Paging paging = new Paging(1);
@@ -328,20 +349,21 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
 
     /**
      * @param userId
-     * @param max
      * @return
      * @throws IndexOutOfBoundsException
      */
-    private List<Status> getTweets(long userId, Date since, int max) throws IndexOutOfBoundsException {
+    private List<Status> getTweets(long userId, Date since) throws IndexOutOfBoundsException {
         List<Status> list = null;
+        int pagingMax = 200;
         try {
-            Paging paging = new Paging(1, max);
+            Paging paging = new Paging(1, pagingMax);
             list = twitterInstance.getUserTimeline(userId, paging);
 
             // Only get the tweets that have been posted after the since date
             int lastStatus = list.size() - 1;
             if (since.before(list.get(lastStatus).getCreatedAt()))
                 return list;
+
         } catch (TwitterException e) {
             e.printStackTrace();
         }

@@ -171,7 +171,7 @@ public class TopicDetection {
      * array.
      * @param response  the response (json string) from the Monkey
      *                  Learn servers.
-     * @return string -> associate response.
+     * @return string -> associated response.
      */
     private Map<String, JSONArray> processResponse(String response) {
         Map<String, JSONArray> result = new HashMap<>();
@@ -189,6 +189,8 @@ public class TopicDetection {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+
+        System.out.println(result.get(feed.get(0)));
 
         return result;
     }
