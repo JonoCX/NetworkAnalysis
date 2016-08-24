@@ -13,6 +13,7 @@ These instructions will get you a copy of the project up and running on your loc
 * Java
 * Maven
 * [Twitter4J](http://twitter4j.org/en/)
+* [SimpleJSON](https://code.google.com/archive/p/json-simple/)
 
 ## Author
 
