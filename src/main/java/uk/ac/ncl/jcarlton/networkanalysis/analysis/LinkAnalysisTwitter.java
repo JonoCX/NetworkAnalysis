@@ -74,7 +74,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             for (long l : users)
                 result.put(l, false);
 
-            // fetch the followers
+            // fetch the followers - need to push files to github
             IDs ids = getFollowers();
             for (long anId : ids.getIDs())
                 if (users.contains(anId))
