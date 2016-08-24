@@ -22,6 +22,7 @@ import java.util.*;
 public class LinkAnalysisTwitter implements LinkAnalysis {
 
     // static users that are keys in the network
+    // these need to be moved into another class. probably the accessing class once the project is packaged
     private static final long STATIC_USER_ONE = 76805343207060275L;
     private static final long STATIC_USER_TWO = 768054311054151680L;
     private static final long STATIC_USER_THREE = 768058443362107392L;
@@ -155,93 +156,115 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     }
 
     /**
-     * Look at the favourites and re-tweets of the user. Check to see if they've
-     * interacted with the static users - favourite a recent tweet or re-tweeted
-     * a recent tweet.
-     * <p>
-     * Storing the recent activity is also a must, in order to compare with the
-     * newer activity. This can be ordered by the date (?) since to the time
-     * of request and then patterns could be look at the in the activity?
-     * The topic of the favourite/re-tweet
-     * etc...
-     * <p>
-     * Could also look at the recent location of the user to see if their location
-     * determines anything.
-     * <p>
-     * date1.compareTo(date2) date1 is after date2
-     * <p>
-     * <p>
-     * return a map, similiar to above to see if they've interacted
-     * with any of the users since the date?
-     * <p>
-     * Structure of the recent activity?
-     * JSONObject?
-     * <p>
-     * {
-     *      "user_id":
-     *       {
-     *          "activity_date":
-     *          {
-     *              "user_id":
-     *              "current_date":
-     *              "last_checked":
-     *              "tweets_liked": [ {"tweet_text": , "tweet_topic":, "id_of_creator" :, "tweet_id":} ]
-     *              "timeline_since_last_checked": [ ]
-     *              "topics_posted": [ {topic:, frequency:}*ordered by most frequent* ]
-     *              "static_users_interacted_with": [ {"user_id":, "method": favourite/re-tweet, "when":} ]
-     *          }
-     *      }
-     * }
+     *
+     * @param users
+     * @param since
+     * @return
      */
-
-
     @Override
     public JSONObject recentActivity(List<Long> users, Date since) {
-        JSONObject result = new JSONObject();
-        Map<Long, List<Status>> retweetsPerUser = new HashMap<>();
-
-
         String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime());
-        String lastChecked = new SimpleDateFormat("dd/MM/yyyy").format(since);
+        String lastChecked = "";
+
+        // if the date is null, then it hasn't been checked before so set it to the current date
+        if (since == null)
+            lastChecked = currentDate;
+        else
+            lastChecked = new SimpleDateFormat("dd/MM/yyyy").format(since);
 
         Map<String, JSONArray> favourites = processFavouritesInteractions(users, since);
         JSONArray tweetsLiked = favourites.get("tweets_liked");
         JSONArray staticUsers = favourites.get("static_users_interacted_with");
         List<Status> timelineSince = getTweets(userId, since);
 
+        // get the text from the timeline of status updates
+        List<String> textFeed = new ArrayList<>();
+        for (Status s : timelineSince)
+            textFeed.add(s.getText());
+
+        JSONArray topicsPosted = topicsPosted(textFeed);
+
+
+        // package the json object
+        JSONObject inner = new JSONObject();
+        inner.put("user_id", userId);
+        inner.put("current_date", currentDate);
+        inner.put("last_checked", lastChecked);
+        inner.put("tweets_liked", tweetsLiked);
+        inner.put("timeline_since_last_checked", timelineSince);
+        inner.put("topics_posted", topicsPosted);
+        inner.put("static_users_interacted_with", staticUsers);
+
+        JSONObject outer = new JSONObject();
+        outer.put("activity_" + currentDate, inner);
+
+        JSONObject result = new JSONObject();
+        result.put("user_id", userId);
 
         return result;
     }
 
-    public JSONArray topicsPosted(List<String> feed) {
+    /**
+     * Process the topics that the user has posted about
+     * and return them in a JSON array ready to be added
+     * to the recent activity json file.
+     *
+     * @param feed
+     * @return
+     */
+    private JSONArray topicsPosted(List<String> feed) {
         TopicDetection detection = new TopicDetection(feed);
         Map<String, JSONArray> response = detection.detectTopicsAll();
 
-        JSONArray result = new JSONArray();
 
         Map<String, Integer> countMap = new HashMap<>();
         for (Map.Entry<String, JSONArray> m : response.entrySet()) {
             JSONArray current = m.getValue();
+            double probability = 0.000;
+            String label = "";
             for (int i = 0; i < current.size(); i++) {
                 JSONObject inner = (JSONObject) current.get(i);
+                double currentProbability = (double) inner.get("probability");
 
+                // pick the label that has the highest probability
+                if (currentProbability > probability) {
+                    probability = currentProbability;
+                    label = (String) inner.get("label");
+                }
+            }
 
+            // if the label is an empty string then it could not be determined
+            if (label.isEmpty())
+                System.out.println("Topic could not be determined for the string : " + m.getKey());
+            else {
+                if (countMap.containsKey(label))
+                    countMap.put(label, countMap.get(label) + 1);
+                else
+                    countMap.put(label, 1);
             }
         }
 
-        Map<String, Integer> sortedMap = MapSorter.valueDescending(countMap);
-        System.out.println(sortedMap);
+
+        Map<String, Integer> sortedMap;
+        if (countMap.size() <= 1)
+            sortedMap = countMap;
+        else
+            sortedMap = MapSorter.valueDescending(countMap);
+
+        // convert to JSON Array
+        JSONArray result = new JSONArray();
+        for (Map.Entry<String, Integer> m : sortedMap.entrySet()) {
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("topic", m.getKey());
+            jsonObject.put("frequency", m.getValue());
+            result.add(jsonObject);
+        }
+
         return result;
     }
 
-    // "tweets_liked": [ {"tweet_text": , "tweet_topic":, "id_of_creator" :, "tweet_id":} ]
-    // "static_users_interacted_with": [ {"user_id":, "method": favourite/re-tweet, "when":} ]
 
-    /**
-     * @param users
-     * @param since
-     * @return
-     */
+
     private Map<String, JSONArray> processFavouritesInteractions(List<Long> users, Date since) {
         TopicDetection detection = new TopicDetection(new LinkedList<String>());
         Map<String, JSONArray> result = new HashMap<>();
@@ -273,6 +296,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 tweetsLiked.add(tweetsLikedObj);
                 tweetsLikedObj = new JSONObject();
 
+                // if the user has liked a tweet by one of the static users
                 if (users.contains(s.getUser().getId())) {
                     usersInteracted.put("user_id", s.getUser().getId());
                     usersInteracted.put("method", "favourite");
@@ -290,11 +314,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         return result;
     }
 
-    /**
-     * @param since
-     * @return
-     * @throws TwitterException
-     */
+
     private List<Status> getFavourites(Date since) throws TwitterException {
         List<Status> result = new ArrayList<>();
         Paging paging = new Paging(1);
@@ -307,10 +327,9 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 temp = twitterInstance.getFavorites(userId, paging);
 
             for (Status s : temp) {
-                if ((s.getCreatedAt()).after(since)) {
-                    System.out.println(s.getUser().getScreenName() + " : " + s.getUser().getId());
+                if ((s.getCreatedAt()).after(since))
                     result.add(s);
-                }
+
             }
 
             temp.clear();
@@ -320,38 +339,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         return result;
     }
 
-    /**
-     * Think about whether this is actually needed, it would
-     * be handy for the analysis but is problematic.
-     * <p>
-     * <p>
-     * Only able to get the first 100 retweets of any tweet due
-     * to Twitter API limitations.
-     *
-     * @param userId
-     * @param since
-     * @return
-     * @throws TwitterException
-     */
-    public List<Status> getRetweets(long userId, Date since) throws TwitterException {
-        List<Status> tweets = getTweets(userId, since);
-        List<Status> retweets = null;
-        if (tweets != null) {
-            Paging paging = new Paging(1);
-            for (Status s : tweets) {
-                retweets = twitterInstance.getRetweets(s.getId());
-                paging.setPage(paging.getPage() + 1);
-            }
-            return retweets;
-        }
-        return retweets;
-    }
 
-    /**
-     * @param userId
-     * @return
-     * @throws IndexOutOfBoundsException
-     */
     private List<Status> getTweets(long userId, Date since) throws IndexOutOfBoundsException {
         List<Status> list = null;
         int pagingMax = 200;

@@ -1,7 +1,13 @@
 package uk.ac.ncl.jcarlton.networkanalysis.util;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -17,9 +23,13 @@ public class Utility {
     public Utility(){}
 
     /**
-     * @param fileName
-     * @param arrSize
-     * @return
+     * Fetch the access codes for the various api's that are
+     * being used throughout the project.
+     *
+     * @param fileName      name of the API
+     * @param arrSize       number of expected tokens
+     * @return String array consisting of the
+     *                      request API tokens
      */
     public String[] getTokens(String fileName, int arrSize) {
         String[] result = new String[arrSize];
@@ -54,5 +64,24 @@ public class Utility {
                 return false;
         }
         return true;
+    }
+
+    /**
+     * @return
+     */
+    public JSONObject readInJSON(String fileName) {
+        File file = new File(getClass().getResource("/json/" + fileName).getFile());
+        JSONObject result = null;
+        try {
+            JSONParser parser = new JSONParser();
+            result = (JSONObject) parser.parse(new FileReader(file));
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public void writeJSON(JSONObject jsonObject) {
+
     }
 }

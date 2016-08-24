@@ -90,6 +90,7 @@ public class TopicDetection {
 
             current = current.replaceAll(REPEATING_CHARS, "$1");
 
+            // check if the remaining String is whitespace or empty
             if (utility.isWhitespace(current) || current.isEmpty()) continue;
             else result.add(current);
         }
