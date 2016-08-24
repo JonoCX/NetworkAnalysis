@@ -21,12 +21,6 @@ import java.util.*;
  */
 public class LinkAnalysisTwitter implements LinkAnalysis {
 
-    // static users that are keys in the network
-    // these need to be moved into another class. probably the accessing class once the project is packaged
-    private static final long STATIC_USER_ONE = 76805343207060275L;
-    private static final long STATIC_USER_TWO = 768054311054151680L;
-    private static final long STATIC_USER_THREE = 768058443362107392L;
-
     private long userId;
     private String username;
     private Twitter twitterInstance;
@@ -74,7 +68,6 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             for (long l : users)
                 result.put(l, false);
 
-            // fetch the followers - need to push files to github
             IDs ids = getFollowers();
             for (long anId : ids.getIDs())
                 if (users.contains(anId))
@@ -157,10 +150,19 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     }
 
     /**
+     * Package the recent activity by the user in question, ready to
+     * be processed and stored.
      *
-     * @param users
-     * @param since
-     * @return
+     * This 'recent activity' includes all social media activity
+     * such as; the tweets they've liked, an up-to-date snapshot
+     * of their timeline, the topics that they've posted about
+     * since being last checked and the static users that they've
+     * interacted with in the meantime.
+     *
+     * @param users     the static users
+     * @param since     the last time the activity was processed
+     * @return JSONObject of all the most recent social
+     *                  media activity from the user in question.
      */
     @Override
     public JSONObject recentActivity(List<Long> users, Date since) {

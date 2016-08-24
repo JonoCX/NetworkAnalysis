@@ -191,8 +191,6 @@ public class TopicDetection {
             e.printStackTrace();
         }
 
-        System.out.println(result.get(feed.get(0)));
-
         return result;
     }
 

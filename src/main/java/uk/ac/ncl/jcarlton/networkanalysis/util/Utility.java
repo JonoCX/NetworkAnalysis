@@ -4,10 +4,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Scanner;
 
 /**
@@ -67,6 +64,9 @@ public class Utility {
     }
 
     /**
+     *
+     *
+     * @param fileName
      * @return
      */
     public JSONObject readInJSON(String fileName) {
@@ -81,7 +81,20 @@ public class Utility {
         return result;
     }
 
-    public void writeJSON(JSONObject jsonObject) {
-
+    /**
+     * @param jsonObject
+     * @param fileName
+     */
+    public void writeJSON(JSONObject jsonObject, String fileName) {
+        File file = new File(getClass().getResource("/json/" + fileName).getFile());
+        try {
+            file.createNewFile();
+            FileWriter writer = new FileWriter(file);
+            writer.write(jsonObject.toJSONString());
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
