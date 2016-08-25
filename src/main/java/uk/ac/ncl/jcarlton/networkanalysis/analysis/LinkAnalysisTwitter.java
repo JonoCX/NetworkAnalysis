@@ -4,7 +4,9 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import twitter4j.*;
 import uk.ac.ncl.jcarlton.networkanalysis.util.MapSorter;
+import uk.ac.ncl.jcarlton.networkanalysis.util.Utility;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -166,14 +168,14 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      */
     @Override
     public JSONObject recentActivity(List<Long> users, Date since) {
-        String currentDate = new SimpleDateFormat("dd/MM/yyyy").format(Calendar.getInstance().getTime());
+        String currentDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(Calendar.getInstance().getTime());
         String lastChecked = "";
 
         // if the date is null, then it hasn't been checked before so set it to the current date
         if (since == null)
             lastChecked = currentDate;
         else
-            lastChecked = new SimpleDateFormat("dd/MM/yyyy").format(since);
+            lastChecked = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(since);
 
         Map<String, JSONArray> favourites = processFavouritesInteractions(users, since);
         JSONArray tweetsLiked = favourites.get("tweets_liked");
@@ -198,13 +200,20 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         inner.put("topics_posted", topicsPosted);
         inner.put("static_users_interacted_with", staticUsers);
 
-        JSONObject outer = new JSONObject();
-        outer.put("activity_" + currentDate, inner);
-
         JSONObject result = new JSONObject();
-        result.put("user_id", userId);
+        result.put("activity_" + currentDate, inner);
 
-        return result;
+        //JSONObject result = new JSOnNObject();
+        //result.put(userId, outer);
+
+        Utility utility = new Utility();
+        try {
+            utility.writeJSON(result, Long.toString(userId));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return utility.readInJSON(Long.toString(userId));
     }
 
     /**

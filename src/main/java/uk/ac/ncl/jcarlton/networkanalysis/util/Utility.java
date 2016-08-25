@@ -5,6 +5,9 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.*;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 /**
@@ -70,31 +73,68 @@ public class Utility {
      * @return
      */
     public JSONObject readInJSON(String fileName) {
-        File file = new File(getClass().getResource("/json/" + fileName).getFile());
-        JSONObject result = null;
-        try {
-            JSONParser parser = new JSONParser();
-            result = (JSONObject) parser.parse(new FileReader(file));
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
+        String resourcePath = getResourcePath();
+        if (resourcePath != null) {
+            File file = new File(resourcePath + "/json/" + fileName + ".json");
+            if (file.exists()) {
+                JSONObject result = null;
+                try {
+                    JSONParser parser = new JSONParser();
+                    System.out.println(parser.parse(new FileReader(file)));
+                    result = (JSONObject) parser.parse(new FileReader(file));
+                } catch (IOException | ParseException e) {
+                    e.printStackTrace();
+                }
+                return result;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
         }
-        return result;
     }
 
     /**
+     *
+     *
      * @param jsonObject
      * @param fileName
      */
-    public void writeJSON(JSONObject jsonObject, String fileName) {
-        File file = new File(getClass().getResource("/json/" + fileName).getFile());
+    public void writeJSON(JSONObject jsonObject, String fileName) throws IOException {
+        String resourcePath = getResourcePath();
+        if (resourcePath != null) {
+            File file = new File(resourcePath + "/json/" + fileName + ".json");
+            try {
+                FileWriter writer;
+                if (!file.createNewFile()) {
+                    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
+                    out.println(jsonObject);
+                    out.flush();
+                    out.close();
+                } else {
+                    writer = new FileWriter(file);
+                    writer.write(jsonObject.toJSONString());
+                    writer.flush();
+                    writer.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            throw new IOException("Error in fetching resource path");
+        }
+    }
+
+    private String getResourcePath() {
         try {
-            file.createNewFile();
-            FileWriter writer = new FileWriter(file);
-            writer.write(jsonObject.toJSONString());
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            URI pathFile = System.class.getResource("/RESOURCE_PATH").toURI();
+            String resourcePath = Files.readAllLines(Paths.get(pathFile)).get(0);
+            URI rootURI = new File("").toURI();
+            URI resourceURI = new File(resourcePath).toURI();
+            URI relativeResourceURI = rootURI.relativize(resourceURI);
+            return relativeResourceURI.getPath();
+        } catch (Exception e) {
+            return null;
         }
     }
 }

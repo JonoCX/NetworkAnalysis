@@ -97,8 +97,8 @@ public class Decision {
      *
      * @return
      */
-    private boolean checkRecentActivity(JSONObject activity) {
-        return false;
+    private boolean checkRecentActivity(JSONObject recentActivity) {
+        return true;
     }
 
 
