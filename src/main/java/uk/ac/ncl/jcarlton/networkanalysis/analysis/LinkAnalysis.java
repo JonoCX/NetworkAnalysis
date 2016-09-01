@@ -2,7 +2,6 @@ package uk.ac.ncl.jcarlton.networkanalysis.analysis;
 
 import org.json.simple.JSONObject;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -37,9 +36,8 @@ public interface LinkAnalysis {
 
     /**
      * @param users
-     * @param since
      * @return
      */
-    JSONObject recentActivity(List<Long> users, Date since);
+    JSONObject recentActivity(List<Long> users);
 
 }

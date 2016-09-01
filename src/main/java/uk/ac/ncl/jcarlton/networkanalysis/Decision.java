@@ -73,7 +73,7 @@ public class Decision {
             return false;
         }
 
-        LinkAnalysisTwitter link = new LinkAnalysisTwitter(requestingUser, new TwitterSetup().getInstance());
+        LinkAnalysisTwitter link = new LinkAnalysisTwitter(requestingUser, new TwitterSetup().getInstance(), lastChecked);
 
         // check for the following link
         Map<Long, Boolean> followMap = link.checkForLinksFollowing(staticUsers);
@@ -82,7 +82,7 @@ public class Decision {
         Map<Long, Boolean> friendMap = link.checkForLinksFriends(staticUsers);
 
         // call check recent activity
-        boolean activity = checkRecentActivity(link.recentActivity(staticUsers, lastChecked));
+        boolean activity = checkRecentActivity(link.recentActivity(staticUsers));
 
 
         return false;
@@ -98,6 +98,8 @@ public class Decision {
      * @return
      */
     private boolean checkRecentActivity(JSONObject recentActivity) {
+
+
         return true;
     }
 

@@ -26,6 +26,8 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     private long userId;
     private String username;
     private Twitter twitterInstance;
+    private Date since;
+    private List<String> feed;
 
     /**
      * Create an object using a user id and an pre-authenticated
@@ -35,10 +37,12 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @param twitterInstance pre-authenticated instance of the Twitter4j
      *                        Twitter API.
      */
-    public LinkAnalysisTwitter(long userId, Twitter twitterInstance) {
+    public LinkAnalysisTwitter(long userId, Twitter twitterInstance, Date since) {
         this.userId = userId;
         this.username = null;
         this.twitterInstance = twitterInstance;
+        this.since = since;
+        setupFeed();
     }
 
     /**
@@ -49,10 +53,37 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @param twitterInstance pre-authenticated instance of the Twitter4j
      *                        Twitter API.
      */
-    public LinkAnalysisTwitter(String username, Twitter twitterInstance) {
+    public LinkAnalysisTwitter(String username, Twitter twitterInstance, Date since) {
         this.username = username;
         this.userId = 0;
         this.twitterInstance = twitterInstance;
+        this.since = since;
+        setupFeed();
+    }
+
+    private void setupFeed() {
+        List<Status> rawFeed;
+        feed = new ArrayList<>();
+        if (userId != 0) {
+            try {
+                username = twitterInstance.getScreenName();
+                rawFeed = getTweets(userId);
+                for (Status s : rawFeed)
+                    feed.add(s.getText());
+            } catch (TwitterException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                userId = twitterInstance.getId();
+                System.out.println(twitterInstance.getId());
+                rawFeed = getTweets(userId);
+                for (Status s : rawFeed)
+                    feed.add(s.getText());
+            } catch (TwitterException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -162,12 +193,11 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * interacted with in the meantime.
      *
      * @param users     the static users
-     * @param since     the last time the activity was processed
      * @return JSONObject of all the most recent social
      *                  media activity from the user in question.
      */
     @Override
-    public JSONObject recentActivity(List<Long> users, Date since) {
+    public JSONObject recentActivity(List<Long> users) {
         String currentDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(Calendar.getInstance().getTime());
         String lastChecked = "";
 
@@ -177,10 +207,15 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         else
             lastChecked = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(since);
 
-        Map<String, JSONArray> favourites = processFavouritesInteractions(users, since);
+        Map<String, JSONArray> favourites = processFavouritesInteractions(users);
         JSONArray tweetsLiked = favourites.get("tweets_liked");
         JSONArray staticUsers = favourites.get("static_users_interacted_with");
-        List<Status> timelineSince = getTweets(userId, since);
+        List<Status> timelineSince = null;
+        try {
+            timelineSince = getTweets(userId);
+        } catch (TwitterException e) {
+            e.printStackTrace();
+        }
 
         // get the text from the timeline of status updates
         List<String> textFeed = new ArrayList<>();
@@ -200,15 +235,15 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         inner.put("topics_posted", topicsPosted);
         inner.put("static_users_interacted_with", staticUsers);
 
-        JSONObject result = new JSONObject();
-        result.put("activity_" + currentDate, inner);
+        //JSONObject result = new JSONObject();
+        //result.put("activity_" + currentDate, inner);
 
         //JSONObject result = new JSOnNObject();
         //result.put(userId, outer);
 
         Utility utility = new Utility();
         try {
-            utility.writeJSON(result, Long.toString(userId));
+            utility.writeJSON(inner, Long.toString(userId));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -276,14 +311,14 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     }
 
 
-
-    private Map<String, JSONArray> processFavouritesInteractions(List<Long> users, Date since) {
-        TopicDetection detection = new TopicDetection(new LinkedList<String>());
+    private Map<String, JSONArray> processFavouritesInteractions(List<Long> users) {
+        TopicDetection detection = new TopicDetection(feed);
         Map<String, JSONArray> result = new HashMap<>();
         JSONArray tweetsLiked = new JSONArray();
         JSONArray interactions = new JSONArray();
         try {
-            List<Status> favourites = getFavourites(since);
+            List<Status> favourites = getFavourites();
+            System.out.println("FAVOURITES: " + favourites);
             JSONObject tweetsLikedObj = new JSONObject();
             JSONObject usersInteracted = new JSONObject();
             for (Status s : favourites) {
@@ -323,11 +358,12 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         } catch (TwitterException e) {
             e.printStackTrace();
         }
+        System.out.println("RESULT: " + result);
         return result;
     }
 
 
-    private List<Status> getFavourites(Date since) throws TwitterException {
+    private List<Status> getFavourites() throws TwitterException {
         List<Status> result = new ArrayList<>();
         Paging paging = new Paging(1);
         List<Status> temp;
@@ -341,7 +377,8 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             for (Status s : temp) {
                 if ((s.getCreatedAt()).after(since))
                     result.add(s);
-
+                else if (s.getCreatedAt().before(since))
+                    break outerloop;
             }
 
             temp.clear();
@@ -352,21 +389,31 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     }
 
 
-    private List<Status> getTweets(long userId, Date since) throws IndexOutOfBoundsException {
-        List<Status> list = null;
-        int pagingMax = 200;
-        try {
-            Paging paging = new Paging(1, pagingMax);
-            list = twitterInstance.getUserTimeline(userId, paging);
+    private List<Status> getTweets(long userId) throws IndexOutOfBoundsException, TwitterException {
+        List<Status> list = new ArrayList<>();
 
-            // Only get the tweets that have been posted after the since date
-            int lastStatus = list.size() - 1;
-            if (since.before(list.get(lastStatus).getCreatedAt()))
-                return list;
+        Paging paging = new Paging(1);
+        List<Status> temp;
+        outerLoop:
+        do {
+            temp = twitterInstance.getUserTimeline(userId, paging);
 
-        } catch (TwitterException e) {
-            e.printStackTrace();
-        }
+            System.out.println("TEMP SIZE: " + temp.size());
+            Status lastStatus = temp.get(temp.size() - 1);
+
+            for (Status s : temp) {
+                if (s.getCreatedAt().after(since)) {
+                    list.add(s);
+                } else if (s.getCreatedAt().before(since)) {
+                    break outerLoop;
+                }
+            }
+
+
+            temp.clear();
+            paging.setPage(paging.getPage() + 1);
+        } while (list.size() > 0);
+        System.out.println("LIST: " + list);
         return list;
     }
 

@@ -8,6 +8,8 @@ import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Scanner;
 
 /**
@@ -80,7 +82,7 @@ public class Utility {
                 JSONObject result = null;
                 try {
                     JSONParser parser = new JSONParser();
-                    System.out.println(parser.parse(new FileReader(file)));
+                    //System.out.println(parser.parse(new FileReader(file)));
                     result = (JSONObject) parser.parse(new FileReader(file));
                 } catch (IOException | ParseException e) {
                     e.printStackTrace();
@@ -104,19 +106,22 @@ public class Utility {
         String resourcePath = getResourcePath();
         if (resourcePath != null) {
             File file = new File(resourcePath + "/json/" + fileName + ".json");
+            String date = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss").format(Calendar.getInstance().getTime());
             try {
                 FileWriter writer;
                 if (!file.createNewFile()) {
-                    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(file, true)));
-                    out.println(jsonObject);
-                    out.flush();
-                    out.close();
+                    JSONObject previous = readInJSON(fileName);
+                    previous.put("activity_" + date, jsonObject);
+                    writer = new FileWriter(file);
+                    writer.write(previous.toJSONString());
                 } else {
                     writer = new FileWriter(file);
-                    writer.write(jsonObject.toJSONString());
-                    writer.flush();
-                    writer.close();
+                    JSONObject first = new JSONObject();
+                    first.put("activity_" + date, jsonObject);
+                    writer.write(first.toJSONString());
                 }
+                writer.flush();
+                writer.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }

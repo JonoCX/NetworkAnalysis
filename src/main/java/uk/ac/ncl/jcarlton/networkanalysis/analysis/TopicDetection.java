@@ -51,6 +51,7 @@ public class TopicDetection {
         setup();
 
         // pre-process the feed on object creation.
+        System.out.println("FEED IN TOPIC DETECTION: " + feed);
         this.feed = preprocessFeed(feed);
     }
 
@@ -84,15 +85,20 @@ public class TopicDetection {
     private List<String> preprocessFeed(List<String> list) {
         List<String> result = new ArrayList<>();
         for (String current : list) {
-            current = current.replaceAll(URL_REGEX, "");
+            String processed = current.replaceAll(URL_REGEX, "");
 
-            current = current.replaceAll(USERNAME_REGEX, "");
+            processed = processed.replaceAll(USERNAME_REGEX, "");
 
-            current = current.replaceAll(REPEATING_CHARS, "$1");
+            processed = processed.replaceAll(REPEATING_CHARS, "$1");
+            //current = current.replaceAll(URL_REGEX, "");
+
+            //current = current.replaceAll(USERNAME_REGEX, "");
+
+            //current = current.replaceAll(REPEATING_CHARS, "$1");
 
             // check if the remaining String is whitespace or empty
-            if (utility.isWhitespace(current) || current.isEmpty()) continue;
-            else result.add(current);
+            if (utility.isWhitespace(processed) || processed.isEmpty()) continue;
+            else result.add(processed);
         }
         return result;
     }
@@ -176,7 +182,7 @@ public class TopicDetection {
      */
     private Map<String, JSONArray> processResponse(String response) {
         Map<String, JSONArray> result = new HashMap<>();
-
+        System.out.println("RESPONSE: " + response);
         try {
             JSONParser parser = new JSONParser();
             JSONObject parsedObject = (JSONObject) parser.parse(response);
@@ -190,7 +196,7 @@ public class TopicDetection {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
+        System.out.println(result);
         return result;
     }
 
