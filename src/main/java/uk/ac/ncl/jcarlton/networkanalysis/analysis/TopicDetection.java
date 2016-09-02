@@ -51,7 +51,7 @@ public class TopicDetection {
         setup();
 
         // pre-process the feed on object creation.
-        System.out.println("FEED IN TOPIC DETECTION: " + feed);
+        // System.out.println("FEED IN TOPIC DETECTION: " + feed);
         this.feed = preprocessFeed(feed);
     }
 
@@ -170,7 +170,10 @@ public class TopicDetection {
             e.printStackTrace();
         }
 
-        return processResponse(builder.toString());
+        if (text.isEmpty())
+            return processResponse(builder.toString());
+        else
+            return processRequestSingular(builder.toString(), text);
     }
 
     /**
@@ -182,7 +185,7 @@ public class TopicDetection {
      */
     private Map<String, JSONArray> processResponse(String response) {
         Map<String, JSONArray> result = new HashMap<>();
-        System.out.println("RESPONSE: " + response);
+        //System.out.println("RESPONSE: " + response);
         try {
             JSONParser parser = new JSONParser();
             JSONObject parsedObject = (JSONObject) parser.parse(response);
@@ -190,13 +193,39 @@ public class TopicDetection {
             // get the json array's of json arrays'
             JSONArray resultArr = (JSONArray) parsedObject.get("result");
 
-            for (int i = 0; i < resultArr.size(); i++)
+            // it sho
+
+            System.out.println("FEED: " + feed);
+            System.out.println("FEED SIZE: " + feed.size());
+            System.out.println("RESULT ARRAY: " + resultArr);
+            System.out.println("RESULT ARRAY SIZE: " + resultArr.size());
+            System.out.println("\n\n\n\n");
+            for (int i = 0; i < resultArr.size(); i++) {
+                System.out.println(i + ". feed.get(i): " + feed.get(i));
+                System.out.println(i + ". resultArr.get(i): " + resultArr.get(i));
                 result.put(feed.get(i), (JSONArray) resultArr.get(i));
+            }
+
+
 
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        System.out.println(result);
+        //System.out.println("RESULT: " + result);
+        return result;
+    }
+
+    private Map<String, JSONArray> processRequestSingular(String response, String text) {
+        Map<String, JSONArray> result = new HashMap<>();
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject parsedObject = (JSONObject) parser.parse(response);
+            JSONArray resultArray = (JSONArray) parsedObject.get("result");
+
+            result.put(text, resultArray);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         return result;
     }
 

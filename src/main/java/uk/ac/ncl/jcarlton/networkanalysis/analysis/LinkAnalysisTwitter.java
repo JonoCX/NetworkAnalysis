@@ -318,13 +318,49 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         JSONArray interactions = new JSONArray();
         try {
             List<Status> favourites = getFavourites();
+//
+//            List<String> favString = new ArrayList<>();
+//            for (Status s : favourites)
+//                favString.add(s.getText());
+//
+//            TopicDetection topicDetection = new TopicDetection(favString);
+//            Map<String, JSONArray> topicResult = topicDetection.detectTopicsAll();
+//
+//            JSONObject tweetsLikedObj = new JSONObject();
+//            JSONObject usersInteracted = new JSONObject();
+//
+//            for (Map.Entry<String, JSONArray> m : topicResult.entrySet()) {
+//                double probability = 0.0;
+//                String label = "";
+//
+//                for (Object obj : m.getValue()) {
+//                    JSONObject jsonObj = (JSONObject) obj;
+//                    double objProb = (double) jsonObj.get("probability");
+//                    if (probability < objProb) {
+//                        probability = objProb;
+//                        label = (String) jsonObj.get("label");
+//                    }
+//                }
+//
+//                tweetsLikedObj.put("tweet_text", m.getKey());
+//                tweetsLikedObj.put("tweet_topic_label", label);
+//                tweetsLikedObj.put("tweet_topic_probability", probability);
+//                tweetsLiked.add(tweetsLikedObj);
+//                tweetsLikedObj = new JSONObject();
+//
+//
+//            }
+
+
             System.out.println("FAVOURITES: " + favourites);
             JSONObject tweetsLikedObj = new JSONObject();
             JSONObject usersInteracted = new JSONObject();
+            int i = 0;
             for (Status s : favourites) {
-
+                //System.out.println("VALUE OF i: " + i);
                 // process topics
                 JSONArray topic = detection.detectTopicSingular(s.getText());
+                System.out.println("TOPIC AFTER DETECTION, SINGULAR: " + topic);
                 double probability = 0.0;
                 String label = "";
                 for (Object t : topic) {
@@ -351,6 +387,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                     interactions.add(usersInteracted);
                     usersInteracted = new JSONObject();
                 }
+                i++;
             }
             result.put("tweets_liked", tweetsLiked);
             result.put("static_users_interacted_with", interactions);
@@ -358,7 +395,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         } catch (TwitterException e) {
             e.printStackTrace();
         }
-        System.out.println("RESULT: " + result);
+        //System.out.println("RESULT: " + result);
         return result;
     }
 
