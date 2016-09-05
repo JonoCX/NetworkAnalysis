@@ -68,15 +68,16 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             try {
                 username = twitterInstance.getScreenName();
                 rawFeed = getTweets(userId);
-                for (Status s : rawFeed)
+                for (Status s : rawFeed) {
                     feed.add(s.getText());
+                }
             } catch (TwitterException e) {
                 e.printStackTrace();
             }
         } else {
             try {
                 userId = twitterInstance.getId();
-                System.out.println(twitterInstance.getId());
+                //System.out.println(twitterInstance.getId());
                 rawFeed = getTweets(userId);
                 for (Status s : rawFeed)
                     feed.add(s.getText());
@@ -197,32 +198,22 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      *                  media activity from the user in question.
      */
     @Override
-    public JSONObject recentActivity(List<Long> users) {
-        String currentDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(Calendar.getInstance().getTime());
+    public JSONObject recentActivity(List<Long> users) throws IOException {
+        String currentDate = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss").format(Calendar.getInstance().getTime());
         String lastChecked = "";
 
         // if the date is null, then it hasn't been checked before so set it to the current date
         if (since == null)
             lastChecked = currentDate;
         else
-            lastChecked = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(since);
+            lastChecked = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss").format(since);
 
-        Map<String, JSONArray> favourites = processFavouritesInteractions(users);
-        JSONArray tweetsLiked = favourites.get("tweets_liked");
-        JSONArray staticUsers = favourites.get("static_users_interacted_with");
-        List<Status> timelineSince = null;
-        try {
-            timelineSince = getTweets(userId);
-        } catch (TwitterException e) {
-            e.printStackTrace();
-        }
+//        Map<String, JSONArray> favourites = processFavouritesInteractions(users);
+//        JSONArray tweetsLiked = favourites.get("tweets_liked");
+//        JSONArray staticUsers = favourites.get("static_users_interacted_with");
 
-        // get the text from the timeline of status updates
-        List<String> textFeed = new ArrayList<>();
-        for (Status s : timelineSince)
-            textFeed.add(s.getText());
 
-        JSONArray topicsPosted = topicsPosted(textFeed);
+        JSONArray topicsPosted = topicsPosted(feed);
 
 
         // package the json object
@@ -230,10 +221,10 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         inner.put("user_id", userId);
         inner.put("current_date", currentDate);
         inner.put("last_checked", lastChecked);
-        inner.put("tweets_liked", tweetsLiked);
-        inner.put("timeline_since_last_checked", timelineSince);
+        //inner.put("tweets_liked", tweetsLiked);
+        inner.put("timeline_since_last_checked", feed);
         inner.put("topics_posted", topicsPosted);
-        inner.put("static_users_interacted_with", staticUsers);
+        //inner.put("static_users_interacted_with", staticUsers);
 
         //JSONObject result = new JSONObject();
         //result.put("activity_" + currentDate, inner);
@@ -248,7 +239,9 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             e.printStackTrace();
         }
 
+
         return utility.readInJSON(Long.toString(userId));
+
     }
 
     /**
@@ -312,63 +305,71 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
 
 
     private Map<String, JSONArray> processFavouritesInteractions(List<Long> users) {
-        TopicDetection detection = new TopicDetection(feed);
+        //TopicDetection detection = new TopicDetection(feed);
         Map<String, JSONArray> result = new HashMap<>();
         JSONArray tweetsLiked = new JSONArray();
         JSONArray interactions = new JSONArray();
         try {
             List<Status> favourites = getFavourites();
+
+            // need to send the monkey learn requests in batches.
+            List<String> textBatch = new ArrayList<>();
+            for (Status s : favourites)
+                textBatch.add(s.getText());
+            TopicDetection detection = new TopicDetection(textBatch);
+            Map<String, JSONArray> detectionResult = detection.detectTopicsAll();
+
+
+            JSONObject usersInteracted = new JSONObject();
+            for (Status status : favourites) {
+                if (users.contains(status.getUser().getId())) {
+                    usersInteracted.put("user_id", status.getUser().getId());
+                    usersInteracted.put("method", "favourite");
+                    usersInteracted.put("tweet_created", status.getCreatedAt());
+                    interactions.add(usersInteracted);
+                    usersInteracted = new JSONObject();
+                }
+            }
+            result.put("static_users_interacted_with", interactions);
+
+            JSONObject tweetsLikedObj = new JSONObject();
+//            for (Status status : favourites) {
+//                for (Map.Entry<String, JSONArray> m: detectionResult.entrySet()) {
+//                    if (status.getText().contains(m.getKey())) {
+//                        double probability = 0.0;
+//                        String label = "";
+//                        for (Object t : m.getValue()) {
+//                            JSONObject jsonObject = (JSONObject) t;
+//                            if (probability < (double) jsonObject.get("probability")) {
+//                                probability = (double) jsonObject.get("probability");
+//                                label = (String) jsonObject.get("label");
+//                        }
 //
-//            List<String> favString = new ArrayList<>();
-//            for (Status s : favourites)
-//                favString.add(s.getText());
 //
-//            TopicDetection topicDetection = new TopicDetection(favString);
-//            Map<String, JSONArray> topicResult = topicDetection.detectTopicsAll();
-//
-//            JSONObject tweetsLikedObj = new JSONObject();
-//            JSONObject usersInteracted = new JSONObject();
-//
-//            for (Map.Entry<String, JSONArray> m : topicResult.entrySet()) {
-//                double probability = 0.0;
-//                String label = "";
-//
-//                for (Object obj : m.getValue()) {
-//                    JSONObject jsonObj = (JSONObject) obj;
-//                    double objProb = (double) jsonObj.get("probability");
-//                    if (probability < objProb) {
-//                        probability = objProb;
-//                        label = (String) jsonObj.get("label");
 //                    }
 //                }
-//
-//                tweetsLikedObj.put("tweet_text", m.getKey());
-//                tweetsLikedObj.put("tweet_topic_label", label);
-//                tweetsLikedObj.put("tweet_topic_probability", probability);
-//                tweetsLiked.add(tweetsLikedObj);
-//                tweetsLikedObj = new JSONObject();
-//
-//
 //            }
 
+            //System.out.println("FAVOURITES: " + favourites);
 
-            System.out.println("FAVOURITES: " + favourites);
-            JSONObject tweetsLikedObj = new JSONObject();
-            JSONObject usersInteracted = new JSONObject();
             int i = 0;
             for (Status s : favourites) {
                 //System.out.println("VALUE OF i: " + i);
                 // process topics
                 JSONArray topic = detection.detectTopicSingular(s.getText());
-                System.out.println("TOPIC AFTER DETECTION, SINGULAR: " + topic);
+                //System.out.println("TOPIC AFTER DETECTION, SINGULAR: " + topic);
                 double probability = 0.0;
                 String label = "";
                 for (Object t : topic) {
-                    JSONObject obj = (JSONObject) t;
-                    if (probability < (double) obj.get("probability")) {
-                        probability = (double) obj.get("probability");
-                        label = (String) obj.get("label");
+                    JSONArray arrObj = (JSONArray) t;
+                    for (Object obj : arrObj) {
+                        JSONObject jsonObj = (JSONObject) obj;
+                        if (probability < (double) jsonObj.get("probability")) {
+                            probability = (double) jsonObj.get("probability");
+                            label = (String) jsonObj.get("label");
+                        }
                     }
+
                 }
 
                 tweetsLikedObj.put("tweet_text", s.getText());
@@ -380,17 +381,17 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 tweetsLikedObj = new JSONObject();
 
                 // if the user has liked a tweet by one of the static users
-                if (users.contains(s.getUser().getId())) {
-                    usersInteracted.put("user_id", s.getUser().getId());
-                    usersInteracted.put("method", "favourite");
-                    usersInteracted.put("tweet_created", s.getCreatedAt());
-                    interactions.add(usersInteracted);
-                    usersInteracted = new JSONObject();
-                }
+//                if (users.contains(s.getUser().getId())) {
+//                    usersInteracted.put("user_id", s.getUser().getId());
+//                    usersInteracted.put("method", "favourite");
+//                    usersInteracted.put("tweet_created", s.getCreatedAt());
+//                    interactions.add(usersInteracted);
+//                    usersInteracted = new JSONObject();
+//                }
                 i++;
             }
             result.put("tweets_liked", tweetsLiked);
-            result.put("static_users_interacted_with", interactions);
+
 
         } catch (TwitterException e) {
             e.printStackTrace();
@@ -435,7 +436,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         do {
             temp = twitterInstance.getUserTimeline(userId, paging);
 
-            System.out.println("TEMP SIZE: " + temp.size());
+            //System.out.println("TEMP SIZE: " + temp.size());
             Status lastStatus = temp.get(temp.size() - 1);
 
             for (Status s : temp) {
@@ -450,7 +451,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             temp.clear();
             paging.setPage(paging.getPage() + 1);
         } while (list.size() > 0);
-        System.out.println("LIST: " + list);
+        //System.out.println("LIST: " + list);
         return list;
     }
 

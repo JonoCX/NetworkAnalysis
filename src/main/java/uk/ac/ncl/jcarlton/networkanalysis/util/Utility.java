@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -74,7 +76,7 @@ public class Utility {
      * @param fileName
      * @return
      */
-    public JSONObject readInJSON(String fileName) {
+    public JSONObject readInJSON(String fileName) throws IOException {
         String resourcePath = getResourcePath();
         if (resourcePath != null) {
             File file = new File(resourcePath + "/json/" + fileName + ".json");
@@ -82,17 +84,16 @@ public class Utility {
                 JSONObject result = null;
                 try {
                     JSONParser parser = new JSONParser();
-                    //System.out.println(parser.parse(new FileReader(file)));
                     result = (JSONObject) parser.parse(new FileReader(file));
                 } catch (IOException | ParseException e) {
                     e.printStackTrace();
                 }
                 return result;
             } else {
-                return null;
+                throw new IOException("File doesn't exist");
             }
         } else {
-            return null;
+            throw new IOException("Cannot read resource path");
         }
     }
 
@@ -130,6 +131,9 @@ public class Utility {
         }
     }
 
+    /**
+     * @return
+     */
     private String getResourcePath() {
         try {
             URI pathFile = System.class.getResource("/RESOURCE_PATH").toURI();
@@ -141,5 +145,24 @@ public class Utility {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * @param list
+     * @param fromIndex
+     * @param toIndex
+     * @param <T>
+     * @return
+     */
+    public static <T> List<T> safeSubList(List<T> list, int fromIndex, int toIndex) {
+        int size = list.size();
+        if (fromIndex >= size || toIndex <= 0 || fromIndex >= toIndex) {
+            return Collections.emptyList();
+        }
+
+        fromIndex = Math.max(0, fromIndex);
+        toIndex = Math.min(size, toIndex);
+
+        return list.subList(fromIndex, toIndex);
     }
 }

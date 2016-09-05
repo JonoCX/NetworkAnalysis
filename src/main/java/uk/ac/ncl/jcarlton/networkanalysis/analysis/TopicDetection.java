@@ -90,11 +90,6 @@ public class TopicDetection {
             processed = processed.replaceAll(USERNAME_REGEX, "");
 
             processed = processed.replaceAll(REPEATING_CHARS, "$1");
-            //current = current.replaceAll(URL_REGEX, "");
-
-            //current = current.replaceAll(USERNAME_REGEX, "");
-
-            //current = current.replaceAll(REPEATING_CHARS, "$1");
 
             // check if the remaining String is whitespace or empty
             if (utility.isWhitespace(processed) || processed.isEmpty()) continue;
@@ -114,7 +109,7 @@ public class TopicDetection {
 
     public JSONArray detectTopicSingular(String text) {
         Map<String, JSONArray> request = requestTopics(text);
-        JSONArray result = new JSONArray();
+        JSONArray result = null;
         for (Map.Entry<String, JSONArray> m : request.entrySet())
             result = m.getValue();
         return result;
@@ -126,6 +121,11 @@ public class TopicDetection {
      * @return string -> [{label, probability}, {label, probability}]
      */
     private Map<String, JSONArray> requestTopics(String text) {
+        if (feed.size() > 20) {
+            List<String> resizedList = Utility.safeSubList(feed, 0, 20);
+            setFeed(resizedList);
+        }
+
         StringBuilder builder = new StringBuilder();
         try {
             URL url = new URL(MONKEY_LEARN_BASE_URL);
@@ -193,25 +193,13 @@ public class TopicDetection {
             // get the json array's of json arrays'
             JSONArray resultArr = (JSONArray) parsedObject.get("result");
 
-            // it sho
-
-            System.out.println("FEED: " + feed);
-            System.out.println("FEED SIZE: " + feed.size());
-            System.out.println("RESULT ARRAY: " + resultArr);
-            System.out.println("RESULT ARRAY SIZE: " + resultArr.size());
-            System.out.println("\n\n\n\n");
             for (int i = 0; i < resultArr.size(); i++) {
-                System.out.println(i + ". feed.get(i): " + feed.get(i));
-                System.out.println(i + ". resultArr.get(i): " + resultArr.get(i));
                 result.put(feed.get(i), (JSONArray) resultArr.get(i));
             }
-
-
 
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        //System.out.println("RESULT: " + result);
         return result;
     }
 
@@ -231,5 +219,9 @@ public class TopicDetection {
 
     public List<String> getFeed() {
         return feed;
+    }
+
+    private void setFeed(List<String> feed) {
+        this.feed = feed;
     }
 }

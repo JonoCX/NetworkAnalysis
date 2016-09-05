@@ -2,6 +2,7 @@ package uk.ac.ncl.jcarlton.networkanalysis.analysis;
 
 import org.json.simple.JSONObject;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,6 @@ public interface LinkAnalysis {
      * @param users
      * @return
      */
-    JSONObject recentActivity(List<Long> users);
+    JSONObject recentActivity(List<Long> users) throws IOException;
 
 }

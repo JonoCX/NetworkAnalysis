@@ -1,12 +1,13 @@
 package uk.ac.ncl.jcarlton.networkanalysis;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import uk.ac.ncl.jcarlton.networkanalysis.analysis.LinkAnalysisTwitter;
 import uk.ac.ncl.jcarlton.networkanalysis.twitter.TwitterSetup;
+import uk.ac.ncl.jcarlton.networkanalysis.util.MapSorter;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Based on the Link Analysis, make a decision as to whether
@@ -70,22 +71,33 @@ public class Decision {
         // the process isn't going to work with null/empty/0'd variables
         if (staticUsers == null || staticUsers.isEmpty() || requestingUser == 0) {
             decision = false;
-            return false;
+            return decision;
         }
 
         LinkAnalysisTwitter link = new LinkAnalysisTwitter(requestingUser, new TwitterSetup().getInstance(), lastChecked);
 
+        boolean follow, friend, activity = false;
+
         // check for the following link
         Map<Long, Boolean> followMap = link.checkForLinksFollowing(staticUsers);
+        follow = checkMap(followMap);
+
 
         // check for the friends link
         Map<Long, Boolean> friendMap = link.checkForLinksFriends(staticUsers);
+        friend = checkMap(friendMap);
 
         // call check recent activity
-        boolean activity = checkRecentActivity(link.recentActivity(staticUsers));
+        try {
+            activity = checkRecentActivity(link.recentActivity(staticUsers));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        if (follow && friend && activity) decision = true;
+        else decision = follow && activity;
 
-        return false;
+        return decision;
     }
 
     /**
@@ -95,12 +107,98 @@ public class Decision {
      * This will identify possible account breaches if
      * the activity isn't inline with previous attempts.
      *
+     * @param recentActivity the stored json object of the users
+     *                       recent activities
      * @return
      */
     private boolean checkRecentActivity(JSONObject recentActivity) {
+        // unable to do anything with just one activity entry
+        if (recentActivity.size() <= 1 || recentActivity.isEmpty())
+            return false;
+
+        Set<String> keySet = new TreeSet<>(new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return o2.compareTo(o1);
+            }
+        });
+        keySet.addAll(recentActivity.keySet());
+
+        //Map<String, Boolean> decisionMap = new HashMap<>();
+
+        // decisionMap.put("topics_posted", topicsChecked(recentActivity, keySet));
 
 
-        return true;
+        return topicsChecked(recentActivity, keySet);
+    }
+
+    /**
+     * Check the contents of the map and return the
+     * result.
+     * <p>
+     * Used to check the friend and follower maps.
+     *
+     * @param map to be checked
+     * @return true/false
+     */
+    private boolean checkMap(Map<Long, Boolean> map) {
+        if (map.isEmpty()) return false; // empty map, return false!
+        else if (!map.containsValue(false)) return true; // contains no false values
+        else {
+            int falseCount = 0;
+            int trueCount = 0;
+            for (Map.Entry<Long, Boolean> m : map.entrySet()) {
+                if (m.getValue()) trueCount++;
+                else falseCount++;
+            }
+
+            // contains more false values than true
+            if (falseCount > trueCount) return false;
+            else return falseCount < trueCount;
+        }
+    }
+
+
+    private boolean topicsChecked(JSONObject recentActivity, Set<String> keySet) {
+        Map<String, Integer> previousTopics = new HashMap<>();
+        boolean topTopicCheck = false;
+        for (String key : keySet) {
+            // compare the topics
+            JSONArray topics = (JSONArray) recentActivity.get(key + ".topics_posted");
+            if (previousTopics.isEmpty()) {
+                for (Object t : topics) {
+                    JSONObject innerTopicObject = (JSONObject) t;
+                    previousTopics.put((String) innerTopicObject.get("topic"), (Integer) innerTopicObject.get("frequency"));
+                }
+                previousTopics = MapSorter.valueDescending(previousTopics);
+            } else {
+                Map<String, Integer> currentTopics = new HashMap<>();
+                for (Object t : topics) {
+                    JSONObject innerTopicObject = (JSONObject) t;
+                    currentTopics.put((String) innerTopicObject.get("topic"), (Integer) innerTopicObject.get("frequency"));
+                }
+                currentTopics = MapSorter.valueDescending(currentTopics);
+
+                // the maps are completely equal
+                if (previousTopics.equals(currentTopics))
+                    return true;
+
+                int loopCounter = 0;
+
+                for (Map.Entry<String, Integer> m : currentTopics.entrySet()) {
+                    if (loopCounter != 2) {
+                        topTopicCheck = previousTopics.containsKey(m.getKey());
+                        loopCounter++;
+                    } else {
+                        break;
+                    }
+                }
+                previousTopics = currentTopics;
+
+            }
+
+        }
+        return topTopicCheck;
     }
 
 
