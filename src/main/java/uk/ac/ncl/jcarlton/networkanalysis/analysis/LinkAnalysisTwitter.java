@@ -103,9 +103,17 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 result.put(l, false);
 
             IDs ids = getFollowers();
-            for (long anId : ids.getIDs())
-                if (users.contains(anId))
-                    result.put(anId, true);
+            for (long u : users) {
+                System.out.println("U: " + u);
+                for (long anId : ids.getIDs()) {
+                    System.out.println("\tanID: " + anId + " : " + (u == anId));
+                    if (u == anId) {
+                        result.put(anId, true);
+                        break;
+                    }
+                }
+            }
+
         } catch (TwitterException e) {
             e.printStackTrace();
         }
@@ -152,9 +160,21 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 result.put(l, false);
 
             IDs ids = getFriends();
-            for (long anId : ids.getIDs())
-                if (users.contains(anId))
-                    result.put(anId, true);
+            System.out.println("FRIENDS: " + ids);
+//            for (long anId : ids.getIDs())
+//                if (users.contains(anId))
+//                    result.put(anId, true);
+
+            for (long u : users) {
+                System.out.println("U: " + u);
+                for (long anId : ids.getIDs()) {
+                    System.out.println("\tanID: " + anId + " : " + (u == anId));
+                    if (u == anId) {
+                        result.put(anId, true);
+                        break;
+                    }
+                }
+            }
         } catch (TwitterException e) {
             e.printStackTrace();
         }

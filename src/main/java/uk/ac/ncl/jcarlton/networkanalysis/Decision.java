@@ -80,11 +80,13 @@ public class Decision {
 
         // check for the following link
         Map<Long, Boolean> followMap = link.checkForLinksFollowing(staticUsers);
+        System.out.println("FOLLOW MAP: " + followMap);
         follow = checkMap(followMap);
 
 
         // check for the friends link
         Map<Long, Boolean> friendMap = link.checkForLinksFriends(staticUsers);
+        System.out.println("FRIEND MAP: " + friendMap);
         friend = checkMap(friendMap);
 
         // call check recent activity
@@ -93,6 +95,10 @@ public class Decision {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("ACTIVITY: " + activity);
+
+        System.out.println("FOLLOW: " + follow);
+        System.out.println("FRIEND: " + friend);
 
         if (follow && friend && activity) decision = true;
         else decision = follow && activity;
@@ -148,8 +154,8 @@ public class Decision {
             int falseCount = 0;
             int trueCount = 0;
             for (Map.Entry<Long, Boolean> m : map.entrySet()) {
-                if (m.getValue()) trueCount++;
-                else falseCount++;
+                if (m.getValue()) trueCount++; // if value = true then increment
+                else falseCount++; // else must be false
             }
 
             // contains more false values than true
@@ -158,24 +164,36 @@ public class Decision {
         }
     }
 
-
+    /**
+     * Check the topics that are stored in the users recent
+     * activity and compare them with the previous.
+     *
+     * @param recentActivity
+     * @param keySet
+     * @return
+     */
     private boolean topicsChecked(JSONObject recentActivity, Set<String> keySet) {
+
         Map<String, Integer> previousTopics = new HashMap<>();
-        boolean topTopicCheck = false;
+        List<Boolean> topTopicCheckList = new ArrayList<>();
+
         for (String key : keySet) {
             // compare the topics
-            JSONArray topics = (JSONArray) recentActivity.get(key + ".topics_posted");
+            JSONObject obj = (JSONObject) recentActivity.get(key);
+            JSONArray topics = (JSONArray) obj.get("topics_posted");
+            if (topics.isEmpty()) return false;
+
             if (previousTopics.isEmpty()) {
                 for (Object t : topics) {
                     JSONObject innerTopicObject = (JSONObject) t;
-                    previousTopics.put((String) innerTopicObject.get("topic"), (Integer) innerTopicObject.get("frequency"));
+                    previousTopics.put((String) innerTopicObject.get("topic"), Math.toIntExact((Long) innerTopicObject.get("frequency")));
                 }
                 previousTopics = MapSorter.valueDescending(previousTopics);
             } else {
                 Map<String, Integer> currentTopics = new HashMap<>();
                 for (Object t : topics) {
                     JSONObject innerTopicObject = (JSONObject) t;
-                    currentTopics.put((String) innerTopicObject.get("topic"), (Integer) innerTopicObject.get("frequency"));
+                    currentTopics.put((String) innerTopicObject.get("topic"), Math.toIntExact((Long) innerTopicObject.get("frequency")));
                 }
                 currentTopics = MapSorter.valueDescending(currentTopics);
 
@@ -187,7 +205,7 @@ public class Decision {
 
                 for (Map.Entry<String, Integer> m : currentTopics.entrySet()) {
                     if (loopCounter != 2) {
-                        topTopicCheck = previousTopics.containsKey(m.getKey());
+                        topTopicCheckList.add(previousTopics.containsKey(m.getKey()));
                         loopCounter++;
                     } else {
                         break;
@@ -198,7 +216,20 @@ public class Decision {
             }
 
         }
-        return topTopicCheck;
+
+        if (topTopicCheckList.isEmpty()) return false;
+        else if (!topTopicCheckList.contains(false)) return true;
+        else {
+            int trueCount = 0;
+            int falseCount = 0;
+            for (Boolean b : topTopicCheckList) {
+                if (b) trueCount++;
+                else falseCount++;
+            }
+
+            if (falseCount > trueCount) return false;
+            else return falseCount <= trueCount;
+        }
     }
 
 
