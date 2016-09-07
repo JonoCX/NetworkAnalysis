@@ -80,13 +80,13 @@ public class Decision {
 
         // check for the following link
         Map<Long, Boolean> followMap = link.checkForLinksFollowing(staticUsers);
-        System.out.println("FOLLOW MAP: " + followMap);
+
         follow = checkMap(followMap);
 
 
         // check for the friends link
         Map<Long, Boolean> friendMap = link.checkForLinksFriends(staticUsers);
-        System.out.println("FRIEND MAP: " + friendMap);
+
         friend = checkMap(friendMap);
 
         // call check recent activity
@@ -95,12 +95,10 @@ public class Decision {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("ACTIVITY: " + activity);
 
-        System.out.println("FOLLOW: " + follow);
-        System.out.println("FRIEND: " + friend);
-
+        // all true then set decision as true
         if (follow && friend && activity) decision = true;
+            // else, if follow and activity is true then set decision as true
         else decision = follow && activity;
 
         return decision;
@@ -129,10 +127,6 @@ public class Decision {
             }
         });
         keySet.addAll(recentActivity.keySet());
-
-        //Map<String, Boolean> decisionMap = new HashMap<>();
-
-        // decisionMap.put("topics_posted", topicsChecked(recentActivity, keySet));
 
 
         return topicsChecked(recentActivity, keySet);

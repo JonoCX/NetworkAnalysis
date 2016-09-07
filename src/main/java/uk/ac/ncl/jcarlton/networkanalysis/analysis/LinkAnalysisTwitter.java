@@ -104,9 +104,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
 
             IDs ids = getFollowers();
             for (long u : users) {
-                System.out.println("U: " + u);
                 for (long anId : ids.getIDs()) {
-                    System.out.println("\tanID: " + anId + " : " + (u == anId));
                     if (u == anId) {
                         result.put(anId, true);
                         break;
@@ -136,6 +134,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 ids = twitterInstance.getFollowersIDs(username, cursor);
             else
                 ids = twitterInstance.getFollowersIDs(userId, cursor);
+            System.out.println("IDS (Followers): " + ids);
         } while ((cursor = ids.getNextCursor()) != 0);
 
         return ids;
@@ -160,15 +159,9 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 result.put(l, false);
 
             IDs ids = getFriends();
-            System.out.println("FRIENDS: " + ids);
-//            for (long anId : ids.getIDs())
-//                if (users.contains(anId))
-//                    result.put(anId, true);
 
             for (long u : users) {
-                System.out.println("U: " + u);
                 for (long anId : ids.getIDs()) {
-                    System.out.println("\tanID: " + anId + " : " + (u == anId));
                     if (u == anId) {
                         result.put(anId, true);
                         break;
@@ -198,6 +191,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 ids = twitterInstance.getFriendsIDs(username, cursor);
             else
                 ids = twitterInstance.getFriendsIDs(userId, cursor);
+            System.out.println("IDS (Friends): " + ids);
         } while ((cursor = ids.getNextCursor()) != 0);
 
         return ids;
