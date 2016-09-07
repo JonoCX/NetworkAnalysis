@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="com.restfb:restfb:1.30.0" type="repository">
+    <properties maven-id="com.restfb:restfb:1.30.0" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/restfb/restfb/1.30.0/restfb-1.30.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.16.6/lombok-1.16.6.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/com/restfb/restfb/1.30.0/restfb-1.30.0.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.16.6/lombok-1.16.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
