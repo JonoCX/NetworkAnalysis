@@ -82,12 +82,14 @@ public class Decision {
         Map<Long, Boolean> followMap = link.checkForLinksFollowing(staticUsers);
 
         follow = checkMap(followMap);
+        System.out.println("follow: " + follow);
 
 
         // check for the friends link
         Map<Long, Boolean> friendMap = link.checkForLinksFriends(staticUsers);
 
         friend = checkMap(friendMap);
+        System.out.println("friend: " + friend);
 
         // call check recent activity
         try {
@@ -95,6 +97,7 @@ public class Decision {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("activity: " + activity);
 
         // all true then set decision as true
         if (follow && friend && activity) decision = true;
@@ -120,6 +123,7 @@ public class Decision {
         if (recentActivity.size() <= 1 || recentActivity.isEmpty())
             return false;
 
+        // sort them into order (most recent first)
         Set<String> keySet = new TreeSet<>(new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
@@ -127,7 +131,6 @@ public class Decision {
             }
         });
         keySet.addAll(recentActivity.keySet());
-
 
         return topicsChecked(recentActivity, keySet);
     }
@@ -162,12 +165,11 @@ public class Decision {
      * Check the topics that are stored in the users recent
      * activity and compare them with the previous.
      *
-     * @param recentActivity
-     * @param keySet
-     * @return
+     * @param recentActivity    recent activity of the user
+     * @param keySet            the keyset within the jsonObject
+     * @return true if satisfactory, false if not
      */
     private boolean topicsChecked(JSONObject recentActivity, Set<String> keySet) {
-
         Map<String, Integer> previousTopics = new HashMap<>();
         List<Boolean> topTopicCheckList = new ArrayList<>();
 
@@ -211,8 +213,13 @@ public class Decision {
 
         }
 
+        // is the list is empty then return false
         if (topTopicCheckList.isEmpty()) return false;
+
+            // if the list contains no false instances, return true
         else if (!topTopicCheckList.contains(false)) return true;
+
+            // else calculate the true/false count
         else {
             int trueCount = 0;
             int falseCount = 0;
@@ -227,9 +234,14 @@ public class Decision {
     }
 
 
+
     /**
      * Getter methods for the object variables
      */
+
+    public Date getLastChecked() {
+        return lastChecked;
+    }
 
     public List<Long> getStaticUsers() {
         return staticUsers;
