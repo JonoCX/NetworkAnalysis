@@ -11,15 +11,15 @@
 
     <groupId>uk.ac.ncl.jcarlton.networkanalysis</groupId>
     <artifactId>network-analysis</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>1.7</source>
+                    <target>1.7</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -35,7 +35,6 @@
     <description>
         A tool to perform network based analysis on a given social media account
         that is going to be used directly along-side the authenticate me module.
-
     </description>
 
 

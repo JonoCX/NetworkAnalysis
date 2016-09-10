@@ -19,7 +19,12 @@ public class MapSorter {
         if (map.isEmpty()) return map;
 
         List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
-        Collections.sort(list, (o1, o2) -> (o1.getValue()).compareTo(o2.getValue()));
+        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+            @Override
+            public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                return (o1.getValue()).compareTo(o2.getValue());
+            }
+        });
 
         Map<K, V> result = new LinkedHashMap<>();
         for (Map.Entry<K, V> m : list)
@@ -39,7 +44,12 @@ public class MapSorter {
         if (map.isEmpty()) return map;
 
         List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
-        Collections.sort(list, (o1, o2) -> (o2.getValue()).compareTo(o1.getValue()));
+        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+            @Override
+            public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                return (o2.getValue()).compareTo(o1.getValue());
+            }
+        });
 
         Map<K, V> result = new LinkedHashMap<>();
         for (Map.Entry<K, V> m : list)
@@ -59,7 +69,13 @@ public class MapSorter {
         if (map.isEmpty()) return map;
 
         List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
-        Collections.sort(list, (o1, o2) -> (o1.toString()).compareTo(o2.toString()));
+
+        Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
+            @Override
+            public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
+                return (o1.toString()).compareTo(o2.toString());
+            }
+        });
 
         Map<K, V> result = new LinkedHashMap<>();
         for (Map.Entry<K, V> m : list)

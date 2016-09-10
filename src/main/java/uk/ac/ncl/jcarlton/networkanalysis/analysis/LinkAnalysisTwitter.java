@@ -222,10 +222,6 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         else
             lastChecked = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss").format(since);
 
-//        Map<String, JSONArray> favourites = processFavouritesInteractions(users);
-//        JSONArray tweetsLiked = favourites.get("tweets_liked");
-//        JSONArray staticUsers = favourites.get("static_users_interacted_with");
-
 
         JSONArray topicsPosted = topicsPosted(feed);
 

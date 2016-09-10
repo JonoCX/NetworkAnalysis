@@ -170,7 +170,7 @@ public class Decision {
      * @return true if satisfactory, false if not
      */
     private boolean topicsChecked(JSONObject recentActivity, Set<String> keySet) {
-        Map<String, Integer> previousTopics = new HashMap<>();
+        Map<String, Long> previousTopics = new HashMap<>();
         List<Boolean> topTopicCheckList = new ArrayList<>();
 
         for (String key : keySet) {
@@ -182,14 +182,14 @@ public class Decision {
             if (previousTopics.isEmpty()) {
                 for (Object t : topics) {
                     JSONObject innerTopicObject = (JSONObject) t;
-                    previousTopics.put((String) innerTopicObject.get("topic"), Math.toIntExact((Long) innerTopicObject.get("frequency")));
+                    previousTopics.put((String) innerTopicObject.get("topic"), (Long) innerTopicObject.get("frequency"));
                 }
                 previousTopics = MapSorter.valueDescending(previousTopics);
             } else {
-                Map<String, Integer> currentTopics = new HashMap<>();
+                Map<String, Long> currentTopics = new HashMap<>();
                 for (Object t : topics) {
                     JSONObject innerTopicObject = (JSONObject) t;
-                    currentTopics.put((String) innerTopicObject.get("topic"), Math.toIntExact((Long) innerTopicObject.get("frequency")));
+                    currentTopics.put((String) innerTopicObject.get("topic"), (Long) innerTopicObject.get("frequency"));
                 }
                 currentTopics = MapSorter.valueDescending(currentTopics);
 
@@ -199,7 +199,7 @@ public class Decision {
 
                 int loopCounter = 0;
 
-                for (Map.Entry<String, Integer> m : currentTopics.entrySet()) {
+                for (Map.Entry<String, Long> m : currentTopics.entrySet()) {
                     if (loopCounter != 2) {
                         topTopicCheckList.add(previousTopics.containsKey(m.getKey()));
                         loopCounter++;
