@@ -55,6 +55,11 @@ public class TopicDetection {
         this.feed = preprocessFeed(feed);
     }
 
+    public TopicDetection(List<String> feed, String apiKey) {
+        this.feed = preprocessFeed(feed);
+        this.apiKey = apiKey;
+    }
+
     /**
      * Setup the elements of the object
      */
@@ -185,7 +190,7 @@ public class TopicDetection {
      */
     private Map<String, JSONArray> processResponse(String response) {
         Map<String, JSONArray> result = new HashMap<>();
-        //System.out.println("RESPONSE: " + response);
+        System.out.println("RESPONSE: " + response);
         try {
             JSONParser parser = new JSONParser();
             JSONObject parsedObject = (JSONObject) parser.parse(response);

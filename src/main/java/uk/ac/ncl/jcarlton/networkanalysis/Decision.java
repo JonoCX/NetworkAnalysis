@@ -2,6 +2,7 @@ package uk.ac.ncl.jcarlton.networkanalysis;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import twitter4j.Twitter;
 import uk.ac.ncl.jcarlton.networkanalysis.analysis.LinkAnalysisTwitter;
 import uk.ac.ncl.jcarlton.networkanalysis.twitter.TwitterSetup;
 import uk.ac.ncl.jcarlton.networkanalysis.util.MapSorter;
@@ -32,6 +33,16 @@ public class Decision {
     private long requestingUser;
     private Date lastChecked;
 
+    // Twitter setup details
+    private String consumerKey;
+    private String secretKey;
+    private String accessToken;
+    private String accessTokenSecret;
+
+    private Twitter instance = null;
+
+    private String mlApiKey = null;
+
     private boolean decision;
 
     /**
@@ -48,6 +59,34 @@ public class Decision {
         this.requestingUser = requestingUser;
         this.staticUsers = staticUsers;
         this.lastChecked = lastChecked;
+    }
+
+    public Decision(long ru, List<Long> su, Date lc, String ck, String sk, String at, String ats) {
+        this.requestingUser = ru;
+        this.staticUsers = su;
+        this.lastChecked = lc;
+        this.consumerKey = ck;
+        this.secretKey = sk;
+        this.accessToken = at;
+        this.accessTokenSecret = ats;
+    }
+
+    public Decision(long ru, List<Long> su, Date lc, Twitter twitter) {
+        this.requestingUser = ru;
+        this.staticUsers = su;
+        this.lastChecked = lc;
+        this.instance = twitter;
+    }
+
+    public Decision(long ru, List<Long> su, Date lc, String ck, String sk, String at, String ats, String mlApiKey) {
+        this.requestingUser = ru;
+        this.staticUsers = su;
+        this.lastChecked = lc;
+        this.consumerKey = ck;
+        this.secretKey = sk;
+        this.accessToken = at;
+        this.accessTokenSecret = ats;
+        this.mlApiKey = mlApiKey;
     }
 
     /**
@@ -74,7 +113,36 @@ public class Decision {
             return decision;
         }
 
-        LinkAnalysisTwitter link = new LinkAnalysisTwitter(requestingUser, new TwitterSetup().getInstance(), lastChecked);
+        LinkAnalysisTwitter link;
+        if (instance != null)
+            link = new LinkAnalysisTwitter(
+                    requestingUser,
+                    instance,
+                    lastChecked);
+        else if (mlApiKey != null) {
+            link = new LinkAnalysisTwitter(
+                    requestingUser,
+                    new TwitterSetup(
+                            consumerKey,
+                            secretKey,
+                            accessToken,
+                            accessTokenSecret
+                    ).getInstance(),
+                    lastChecked,
+                    mlApiKey
+            );
+        } else {
+            link = new LinkAnalysisTwitter(
+                    requestingUser,
+                    new TwitterSetup(
+                            consumerKey,
+                            secretKey,
+                            accessToken,
+                            accessTokenSecret
+                    ).getInstance(),
+                    lastChecked
+            );
+        }
 
         boolean follow, friend, activity = false;
 
@@ -165,8 +233,8 @@ public class Decision {
      * Check the topics that are stored in the users recent
      * activity and compare them with the previous.
      *
-     * @param recentActivity    recent activity of the user
-     * @param keySet            the keyset within the jsonObject
+     * @param recentActivity recent activity of the user
+     * @param keySet         the keyset within the jsonObject
      * @return true if satisfactory, false if not
      */
     private boolean topicsChecked(JSONObject recentActivity, Set<String> keySet) {
@@ -232,7 +300,6 @@ public class Decision {
             else return falseCount <= trueCount;
         }
     }
-
 
 
     /**

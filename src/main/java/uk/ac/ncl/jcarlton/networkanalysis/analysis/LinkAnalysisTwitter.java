@@ -29,6 +29,8 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     private Date since;
     private List<String> feed;
 
+    private String mlApiKey = null;
+
     /**
      * Create an object using a user id and an pre-authenticated
      * instance of the Twitter (Twitter4j) API.
@@ -58,6 +60,14 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         this.userId = 0;
         this.twitterInstance = twitterInstance;
         this.since = since;
+        setupFeed();
+    }
+
+    public LinkAnalysisTwitter(long userId, Twitter twitter, Date since, String mlApiKey) {
+        this.userId = userId;
+        this.twitterInstance = twitter;
+        this.since = since;
+        this.mlApiKey = mlApiKey;
         setupFeed();
     }
 
@@ -263,7 +273,11 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @return
      */
     private JSONArray topicsPosted(List<String> feed) {
-        TopicDetection detection = new TopicDetection(feed);
+        TopicDetection detection;
+        if (mlApiKey != null)
+            detection = new TopicDetection(feed, mlApiKey);
+        else
+            detection = new TopicDetection(feed);
         Map<String, JSONArray> response = detection.detectTopicsAll();
 
 

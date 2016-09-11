@@ -17,6 +17,14 @@ public class TwitterSetup {
     private String accessToken;
     private String accessTokenSecret;
 
+    public TwitterSetup(String ck, String sk, String at, String ats) {
+        this.consumerKey = ck;
+        this.secretKey = sk;
+        this.accessToken = at;
+        this.accessTokenSecret = ats;
+        //setup();
+    }
+
     public TwitterSetup() {
         setup();
     }
