@@ -15,6 +15,7 @@ Download the .jar file the libs folder of this repository and add to your projec
 * Java
 * Maven
 * [Twitter4J](http://twitter4j.org/en/)
+* [Monkey Learn](http://www.monkeylearn.com/)
 * [SimpleJSON](https://code.google.com/archive/p/json-simple/)
 
 ## Author
