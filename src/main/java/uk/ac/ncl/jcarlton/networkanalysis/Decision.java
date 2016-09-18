@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
+ * <h1>Decision</h1>
  * Based on the Link Analysis, make a decision as to whether
  * or not the request user is able to authenticate with the
  * system. Returning a True (yes, they can authenticate) or
@@ -25,7 +26,7 @@ import java.util.*;
  * Currently set-up for Twitter but could be changed
  * to accommodate both Twitter and Facebook.
  *
- * @author Jonathan Carlton on 24-Aug-16
+ * @author Jonathan Carlton
  */
 public class Decision {
 
@@ -61,6 +62,17 @@ public class Decision {
         this.lastChecked = lastChecked;
     }
 
+    /**
+     * Object constructor whereby the API Keys are supplied.
+     *
+     * @param ru  the requesting user.
+     * @param su  the list of static users.
+     * @param lc  the date that the requesting user was last checked.
+     * @param ck  the consumer key (Twitter4J).
+     * @param sk  the secret key (Twitter4J).
+     * @param at  the access token (Twitter4J).
+     * @param ats the access token secret (Twitter4J).
+     */
     public Decision(long ru, List<Long> su, Date lc, String ck, String sk, String at, String ats) {
         this.requestingUser = ru;
         this.staticUsers = su;
@@ -71,6 +83,14 @@ public class Decision {
         this.accessTokenSecret = ats;
     }
 
+    /**
+     * Object constructor to be used when you already have an
+     * authenticated instance of the Twitter4J Twitter API.
+     * @param ru        the requesting user.
+     * @param su        the list of static users.
+     * @param lc        the last time the requesting user was checked
+     * @param twitter   the authenticated Twitter (Twitter4J) instance.
+     */
     public Decision(long ru, List<Long> su, Date lc, Twitter twitter) {
         this.requestingUser = ru;
         this.staticUsers = su;
@@ -78,6 +98,18 @@ public class Decision {
         this.instance = twitter;
     }
 
+    /**
+     * Object constructor to be used when both the keys for Twitter4J and
+     * MonkeyLearn need to be passed.
+     * @param ru        the requesting user.
+     * @param su        the list of static users.
+     * @param lc        the last time the requesting user was checked
+     * @param ck        the consumer key (Twitter4J).
+     * @param sk        the secret key (Twitter4J).
+     * @param at        the access token (Twitter4J).
+     * @param ats       the access token secret (Twitter4J).
+     * @param mlApiKey  the Monkey Learn API key.
+     */
     public Decision(long ru, List<Long> su, Date lc, String ck, String sk, String at, String ats, String mlApiKey) {
         this.requestingUser = ru;
         this.staticUsers = su;
@@ -183,8 +215,9 @@ public class Decision {
      * the activity isn't inline with previous attempts.
      *
      * @param recentActivity the stored json object of the users
-     *                       recent activities
-     * @return
+     *                       recent activities.
+     * @return if the activity is inline with previously
+     *                      stored activities = true, else false.
      */
     private boolean checkRecentActivity(JSONObject recentActivity) {
         // unable to do anything with just one activity entry
@@ -303,21 +336,33 @@ public class Decision {
 
 
     /**
-     * Getter methods for the object variables
+     * Get last checked.
+     * @return last checked.
      */
-
     public Date getLastChecked() {
         return lastChecked;
     }
 
+    /**
+     * Get the static users.
+     * @return the static users.
+     */
     public List<Long> getStaticUsers() {
         return staticUsers;
     }
 
+    /**
+     * Get the requesting user.
+     * @return the requesting user.
+     */
     public long getRequestingUser() {
         return requestingUser;
     }
 
+    /**
+     * Get the decision.
+     * @return the decision.
+     */
     public boolean isDecision() {
         return decision;
     }

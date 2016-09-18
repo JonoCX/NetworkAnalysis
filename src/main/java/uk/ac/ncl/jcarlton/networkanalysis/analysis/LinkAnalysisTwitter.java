@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
+ * <h1>Link Analysis Twitter</h1>
  * Perform link analysis on a Twitter based data
  * set.
  * <p>
@@ -19,7 +20,6 @@ import java.util.*;
  * are processed for consumption.
  *
  * @author Jonathan Carlton
- * @version 1.0
  */
 public class LinkAnalysisTwitter implements LinkAnalysis {
 
@@ -38,6 +38,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @param userId          the id of a user from Twitter.
      * @param twitterInstance pre-authenticated instance of the Twitter4j
      *                        Twitter API.
+     * @param since           the last time the user was checked.
      */
     public LinkAnalysisTwitter(long userId, Twitter twitterInstance, Date since) {
         this.userId = userId;
@@ -54,6 +55,7 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @param username        the username (screen name) of a user from Twitter.
      * @param twitterInstance pre-authenticated instance of the Twitter4j
      *                        Twitter API.
+     * @param since           the last time the user was checked
      */
     public LinkAnalysisTwitter(String username, Twitter twitterInstance, Date since) {
         this.username = username;
@@ -63,6 +65,15 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         setupFeed();
     }
 
+    /**
+     * Object constructor to be used when a MonkeyLearn API key
+     * is required.
+     *
+     * @param userId   the userid of the requesting user.
+     * @param twitter  twitter4J instance of the Twitter API.
+     * @param since    last time the user was checked.
+     * @param mlApiKey monkey learn api key.
+     */
     public LinkAnalysisTwitter(long userId, Twitter twitter, Date since, String mlApiKey) {
         this.userId = userId;
         this.twitterInstance = twitter;
@@ -71,6 +82,10 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         setupFeed();
     }
 
+    /**
+     * Setup the feed by fetching it from
+     * Twitter.
+     */
     private void setupFeed() {
         List<Status> rawFeed;
         feed = new ArrayList<>();
@@ -220,6 +235,8 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * @param users     the static users
      * @return JSONObject of all the most recent social
      *                  media activity from the user in question.
+     * @throws IOException  thrown from the the fileIO methods that
+     *                      are used in the method.
      */
     @Override
     public JSONObject recentActivity(List<Long> users) throws IOException {
@@ -241,16 +258,9 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         inner.put("user_id", userId);
         inner.put("current_date", currentDate);
         inner.put("last_checked", lastChecked);
-        //inner.put("tweets_liked", tweetsLiked);
         inner.put("timeline_since_last_checked", feed);
         inner.put("topics_posted", topicsPosted);
-        //inner.put("static_users_interacted_with", staticUsers);
 
-        //JSONObject result = new JSONObject();
-        //result.put("activity_" + currentDate, inner);
-
-        //JSONObject result = new JSOnNObject();
-        //result.put(userId, outer);
 
         Utility utility = new Utility();
         try {
@@ -269,8 +279,9 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
      * and return them in a JSON array ready to be added
      * to the recent activity json file.
      *
-     * @param feed
-     * @return
+     * @param feed  a list of tweets (their strings).
+     * @return JSONArray of JSONObjects for the topics that
+     *              the requesting user has spoken about.
      */
     private JSONArray topicsPosted(List<String> feed) {
         TopicDetection detection;
@@ -327,7 +338,14 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         return result;
     }
 
-
+    /**
+     * Process the favouriting (liking other users tweets) interactions
+     * that the requesting user has.
+     *
+     * @param users list of static users, to check if the requesting user
+     *              has interacted with them.
+     * @return string mapped to the topics of the favourites.
+     */
     private Map<String, JSONArray> processFavouritesInteractions(List<Long> users) {
         //TopicDetection detection = new TopicDetection(feed);
         Map<String, JSONArray> result = new HashMap<>();
@@ -357,31 +375,12 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
             result.put("static_users_interacted_with", interactions);
 
             JSONObject tweetsLikedObj = new JSONObject();
-//            for (Status status : favourites) {
-//                for (Map.Entry<String, JSONArray> m: detectionResult.entrySet()) {
-//                    if (status.getText().contains(m.getKey())) {
-//                        double probability = 0.0;
-//                        String label = "";
-//                        for (Object t : m.getValue()) {
-//                            JSONObject jsonObject = (JSONObject) t;
-//                            if (probability < (double) jsonObject.get("probability")) {
-//                                probability = (double) jsonObject.get("probability");
-//                                label = (String) jsonObject.get("label");
-//                        }
-//
-//
-//                    }
-//                }
-//            }
-
-            //System.out.println("FAVOURITES: " + favourites);
 
             int i = 0;
             for (Status s : favourites) {
-                //System.out.println("VALUE OF i: " + i);
                 // process topics
                 JSONArray topic = detection.detectTopicSingular(s.getText());
-                //System.out.println("TOPIC AFTER DETECTION, SINGULAR: " + topic);
+
                 double probability = 0.0;
                 String label = "";
                 for (Object t : topic) {
@@ -405,13 +404,13 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
                 tweetsLikedObj = new JSONObject();
 
                 // if the user has liked a tweet by one of the static users
-//                if (users.contains(s.getUser().getId())) {
-//                    usersInteracted.put("user_id", s.getUser().getId());
-//                    usersInteracted.put("method", "favourite");
-//                    usersInteracted.put("tweet_created", s.getCreatedAt());
-//                    interactions.add(usersInteracted);
-//                    usersInteracted = new JSONObject();
-//                }
+                if (users.contains(s.getUser().getId())) {
+                    usersInteracted.put("user_id", s.getUser().getId());
+                    usersInteracted.put("method", "favourite");
+                    usersInteracted.put("tweet_created", s.getCreatedAt());
+                    interactions.add(usersInteracted);
+                    usersInteracted = new JSONObject();
+                }
                 i++;
             }
             result.put("tweets_liked", tweetsLiked);
@@ -420,11 +419,15 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         } catch (TwitterException e) {
             e.printStackTrace();
         }
-        //System.out.println("RESULT: " + result);
+
         return result;
     }
 
-
+    /**
+     * Fetch the favourites of the requesting user.
+     * @return a list of Tweet statuses
+     * @throws TwitterException thrown from the Twitter4J API
+     */
     private List<Status> getFavourites() throws TwitterException {
         List<Status> result = new ArrayList<>();
         Paging paging = new Paging(1);
@@ -451,7 +454,14 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
     }
 
 
-    private List<Status> getTweets(long userId) throws IndexOutOfBoundsException, TwitterException {
+    /**
+     * Fetch the Tweets of a user
+     *
+     * @param userId the requesting users id
+     * @return list of Twitter statuses
+     * @throws TwitterException thrown from the Twitter4J API
+     */
+    private List<Status> getTweets(long userId) throws TwitterException {
         List<Status> list = new ArrayList<>();
 
         Paging paging = new Paging(1);
@@ -479,7 +489,4 @@ public class LinkAnalysisTwitter implements LinkAnalysis {
         return list;
     }
 
-    private JSONObject packageJSON() {
-        return new JSONObject();
-    }
 }

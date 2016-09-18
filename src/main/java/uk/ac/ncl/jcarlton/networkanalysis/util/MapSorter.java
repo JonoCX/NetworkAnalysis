@@ -3,7 +3,11 @@ package uk.ac.ncl.jcarlton.networkanalysis.util;
 import java.util.*;
 
 /**
- * Created by jonathan on 15/08/2016.
+ * <h1>Map Sorter</h1>
+ * A generic class that performs sorting operations on
+ * maps.
+ *
+ * @author Jonathan Carlton
  */
 public class MapSorter {
 

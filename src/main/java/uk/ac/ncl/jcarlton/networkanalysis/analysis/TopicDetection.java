@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * <h1>Topic Detection</h1>
  * A class to perform topic detection based on a social
  * media feed.
  *
@@ -25,7 +26,6 @@ import java.util.Map;
  * Learn server.
  *
  * @author Jonathan Carlton
- * @version 1.0
  */
 public class TopicDetection {
 
@@ -55,6 +55,12 @@ public class TopicDetection {
         this.feed = preprocessFeed(feed);
     }
 
+    /**
+     * Object constructor for when an api key is needed.
+     *
+     * @param feed   the social media feed.
+     * @param apiKey the required api key.
+     */
     public TopicDetection(List<String> feed, String apiKey) {
         this.feed = preprocessFeed(feed);
         this.apiKey = apiKey;
@@ -106,12 +112,17 @@ public class TopicDetection {
     /**
      * From the feed detect the topics
      *
-     * @return string -> [{label, probability}, {label, probability}]
+     * @return string mapped to [{label, probability}, {label, probability}]
      */
     public Map<String, JSONArray> detectTopicsAll() {
         return requestTopics("");
     }
 
+    /**
+     * Detect the topic of a single string.
+     * @param text  the string to be usec
+     * @return the resulting topic.
+     */
     public JSONArray detectTopicSingular(String text) {
         Map<String, JSONArray> request = requestTopics(text);
         JSONArray result = null;
@@ -122,8 +133,9 @@ public class TopicDetection {
 
     /**
      * Internal method to detect the topics through making a request
-     * to the Monkey Learn servers
-     * @return string -> [{label, probability}, {label, probability}]
+     * to the Monkey Learn servers.
+     * @param text  can be used to pass a single string to detect the topic.
+     * @return string mapped to [{label, probability}, {label, probability}]
      */
     private Map<String, JSONArray> requestTopics(String text) {
         if (feed.size() > 20) {
@@ -186,7 +198,7 @@ public class TopicDetection {
      * array.
      * @param response  the response (json string) from the Monkey
      *                  Learn servers.
-     * @return string -> associated response.
+     * @return string mapped to associated response.
      */
     private Map<String, JSONArray> processResponse(String response) {
         Map<String, JSONArray> result = new HashMap<>();
@@ -208,6 +220,12 @@ public class TopicDetection {
         return result;
     }
 
+    /**
+     * Process the response from a single String.
+     * @param response  the response from the server.
+     * @param text      the single String.
+     * @return the string mapped to the associated response.
+     */
     private Map<String, JSONArray> processRequestSingular(String response, String text) {
         Map<String, JSONArray> result = new HashMap<>();
         try {
@@ -222,10 +240,18 @@ public class TopicDetection {
         return result;
     }
 
+    /**
+     * Get the feed.
+     * @return the feed.
+     */
     public List<String> getFeed() {
         return feed;
     }
 
+    /**
+     * Set the feed.
+     * @param feed  the feed to be used.
+     */
     private void setFeed(List<String> feed) {
         this.feed = feed;
     }

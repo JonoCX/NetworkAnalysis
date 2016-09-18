@@ -12,15 +12,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * <h1>Utility</h1>
  * Utility class that provides handy methods that
  * can/could be used across the scope of the
  * project.
  *
  * @author Jonathan Carlton
- * @version 1.0
  */
 public class Utility {
 
+    /**
+     * Default object constructor
+     */
     public Utility() {
     }
 
@@ -36,19 +39,6 @@ public class Utility {
     public String[] getTokens(String fileName, int arrSize) {
         String[] result = new String[arrSize];
 
-//        File file = new File(getClass().getResource("/access-codes/" + fileName).getFile());
-//
-//        int i = 0;
-//        try (Scanner scanner = new Scanner(file)) {
-//            while (scanner.hasNextLine()) {
-//                String line = scanner.nextLine();
-//                result[i] = line;
-//                i++;
-//            }
-//            scanner.close();
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
 
         BufferedReader reader = null;
         try {
@@ -75,8 +65,18 @@ public class Utility {
     }
 
     /**
-     * @param str
-     * @return
+     * Check to see if a String is just made up of
+     * whitespace.
+     *
+     * <b>Note:</b> An empty String, tested with .isEmpty()
+     * will return true if the String representation is "". However,
+     * it will return false if the String is made up of whitespace:
+     * "  ".
+     *
+     * @param str       the String to be checked.
+     *
+     * @return true if the String is made up purely
+     *                  of whitespace and false if it is not.
      */
     public boolean isWhitespace(String str) {
         if (str == null) return false;
@@ -89,8 +89,18 @@ public class Utility {
     }
 
     /**
-     * @param fileName
-     * @return
+     * Read in the stored JSON from the internal memory, given
+     * a particular file name.
+     *
+     * @param fileName          the name of the file, for the stored
+     *                          json it will be the requesting users
+     *                          id.
+     *
+     * @return the stored information as a JSON object,
+     *                          all information stored.
+     *
+     * @throws IOException      thrown when the file can't be found
+     *                          or read just to corruption, etc.
      */
     public JSONObject readInJSON(String fileName) throws IOException {
         BufferedReader reader;
@@ -105,38 +115,24 @@ public class Utility {
         }
 
         return result;
-
-//        String resourcePath = getResourcePath();
-//        if (resourcePath != null) {
-//            File file = new File(resourcePath + "/json/" + fileName + ".json");
-//            if (file.exists()) {
-//                JSONObject result = null;
-//                try {
-//                    JSONParser parser = new JSONParser();
-//                    result = (JSONObject) parser.parse(new FileReader(file));
-//                } catch (IOException | ParseException e) {
-//                    e.printStackTrace();
-//                }
-//                return result;
-//            } else {
-//                throw new IOException("File doesn't exist");
-//            }
-//        } else {
-//            throw new IOException("Cannot read resource path");
-//        }
     }
 
     /**
-     * @param jsonObject
-     * @param fileName
+     * Write a JSON object to the internal memory of the device
+     * that the application is running on.
+     *
+     * @param jsonObject        the object to be written
+     *
+     * @param fileName          the name of the file - usually the
+     *                          user's id
+     *
+     * @throws IOException      thrown if the file cannot be written
+     *                          to.
      */
     public void writeJSON(JSONObject jsonObject, String fileName) throws IOException {
 
         String date = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss").format(Calendar.getInstance().getTime());
-//            URL resourceURL = getClass().getResource("/json/" + fileName + ".json");
-//            File file = new File(resourceURL.toURI());
         FileWriter writer;
-        //PrintWriter writer = new PrintWriter(new File(this.getClass().getResource("/json/" + fileName + ".json").getPath()));
         File file = new File(fileName + ".json");
         if (!file.createNewFile()) {
             JSONObject previous = readInJSON(fileName);
@@ -152,47 +148,15 @@ public class Utility {
         writer.flush();
         writer.close();
 
-
-//        String resourcePath = getResourcePath();
-//        if (resourcePath != null) {
-//            System.out.println("RESOURCE PATH: " + resourcePath);
-//            resourcePath = resourcePath.substring(0, 15);
-//            System.out.println("RESOURCE PATH : " + resourcePath);
-//            File file = new File(resourcePath + "/json/" + fileName + ".json");
-//        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(getClass().getResourceAsStream("/json/" + fileName + ".json")));
-//        File file = new File("/resources/json/" + fileName + ".json");
-//        String date = new SimpleDateFormat("dd-MM-yyyy-HH:mm:ss").format(Calendar.getInstance().getTime());
-//        try {
-//            FileWriter writer;
-//            if (!file.createNewFile()) {
-//                JSONObject previous = readInJSON(fileName);
-//                previous.put("activity_" + date, jsonObject);
-//                writer = new FileWriter(file);
-//                writer.write(previous.toJSONString());
-//            } else {
-//                writer = new FileWriter(file);
-//                JSONObject first = new JSONObject();
-//                first.put("activity_" + date, jsonObject);
-//                writer.write(first.toJSONString());
-//            }
-//            writer.flush();
-//            writer.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        } else {
-//            throw new IOException("Error in fetching resource path");
-//        }
     }
 
     /**
-     * @return
+     * Fetch the Maven resource path for reading/writing files to.
+     * @return the resource path.
      */
     private String getResourcePath() {
         try {
             URI pathFile = System.class.getResource("/RESOURCE_PATH").toURI();
-            //String resourcePath = Files.readAllLines(Paths.get(pathFile)).get(0);
-            //String resourcePath = Files.readAllLines(Paths.get(pathFile)).get(0);
             File file = new File(pathFile);
             String resourcePath = file.getAbsolutePath();
             URI rootURI = new File("").toURI();
@@ -205,11 +169,18 @@ public class Utility {
     }
 
     /**
-     * @param list
-     * @param fromIndex
-     * @param toIndex
-     * @param <T>
-     * @return
+     * Generic method for creating a sub list safely.
+     *
+     * @param list          the list to be reduced in size.
+     *
+     * @param fromIndex     the starting index.
+     *
+     * @param toIndex       the finishing point.
+     *
+     * @param <T>           generic type of the list.
+     *
+     * @return the reduced list from the fromIndex
+     *                      to the toIndex.
      */
     public static <T> List<T> safeSubList(List<T> list, int fromIndex, int toIndex) {
         int size = list.size();

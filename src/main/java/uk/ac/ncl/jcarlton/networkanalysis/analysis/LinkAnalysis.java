@@ -7,8 +7,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * <h1>Link Analysis Interface</h1>
+ * The interface defines the methods that a class, which
+ * implements it, should also define. The methods are the
+ * building blocks on which to perform Link Analysis
+ * (specifically related to social media).
+ *
  * @author Jonathan Carlton
- *         17/08/2016.
  */
 public interface LinkAnalysis {
 
@@ -36,8 +41,20 @@ public interface LinkAnalysis {
     Map<Long, Boolean> checkForLinksFriends(List<Long> users);
 
     /**
-     * @param users
-     * @return
+     * Package the recent activity by the user in question, ready to
+     * be processed and stored.
+     *
+     * This 'recent activity' includes all social media activity
+     * such as; the tweets they've liked, an up-to-date snapshot
+     * of their timeline, the topics that they've posted about
+     * since being last checked and the static users that they've
+     * interacted with in the meantime.
+     *
+     * @param users     the static users
+     * @return JSONObject of all the most recent social
+     *                  media activity from the user in question.
+     * @throws IOException  thrown from the the fileIO methods that
+     *                      are used in the method.
      */
     JSONObject recentActivity(List<Long> users) throws IOException;
 
