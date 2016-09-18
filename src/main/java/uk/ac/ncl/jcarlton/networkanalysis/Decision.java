@@ -55,6 +55,7 @@ public class Decision {
      *
      * @param requestingUser the user attempting to authenticate
      * @param staticUsers    a list of user ids
+     * @param lastChecked   the last time the user was checked
      */
     public Decision(long requestingUser, List<Long> staticUsers, Date lastChecked) {
         this.requestingUser = requestingUser;
@@ -124,8 +125,9 @@ public class Decision {
     /**
      * Reset option to re-try the authentication process.
      *
-     * @param requestingUser the user attempting to authenticate
-     * @param staticUsers    a list of user ids
+     * @param requestingUser the user attempting to authenticate.
+     * @param staticUsers    a list of user ids.
+     * @param lastChecked   the last time the requesting user was checked.
      * @return a new Decision object
      */
     public Decision reset(long requestingUser, List<Long> staticUsers, Date lastChecked) {

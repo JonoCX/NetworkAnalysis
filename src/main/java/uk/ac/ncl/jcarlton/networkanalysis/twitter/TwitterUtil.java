@@ -11,6 +11,7 @@ import java.util.List;
 /**
  * <h1>Twitter Utility</h1>
  * Builder class to be an instance of Twitter.
+ *
  * @author Jonathan Carlton
  */
 public class TwitterUtil {
@@ -20,7 +21,7 @@ public class TwitterUtil {
     private long userId;
 
     /**
-     *  Inner builder class.
+     * Inner builder class.
      */
     public static class Builder {
         private Twitter twitterInstance;
@@ -41,7 +42,8 @@ public class TwitterUtil {
         /**
          * When using the builder, you're able to pass an optional
          * user name to the object as part of the build process
-         * @param userName  the user name of the Twitter user.
+         *
+         * @param userName the user name of the Twitter user.
          * @return the constructed builder object.
          */
         public Builder userName(String userName) {
@@ -52,7 +54,8 @@ public class TwitterUtil {
         /**
          * When using the builder, you're able to pass an optional
          * user id to the object as part of the build process.
-         * @param userId    the user id of the Twitter user.
+         *
+         * @param userId the user id of the Twitter user.
          * @return the constructed builder object.
          */
         public Builder userId(long userId) {
@@ -64,7 +67,8 @@ public class TwitterUtil {
          * This method is called last, once the three methods are used/
          * not used. It builds the builder object to return an instance
          * of the TwitterUtil class.
-         * @return
+         *
+         * @return a TwitterUtil built object.
          */
         public TwitterUtil build() {
             return new TwitterUtil(this);
@@ -74,8 +78,9 @@ public class TwitterUtil {
     /**
      * Private constructor that takes a Builder object to
      * construct the TwitterUtil object.
-     * @param builder   the builder object with the variables
-     *                  already initialised.
+     *
+     * @param builder the builder object with the variables
+     *                already initialised.
      */
     private TwitterUtil(Builder builder) {
         this.twitterInstance = builder.twitterInstance;
@@ -85,10 +90,11 @@ public class TwitterUtil {
 
     /**
      * Fetch the tweets of a user.
-     *
+     * <p>
      * <b>Note:</b> Doesnt include all the meta-data for the
      * tweets, just the actual text of the tweet.
-     * @param max   max number of tweets to fetch.
+     *
+     * @param max max number of tweets to fetch.
      * @return the list of the tweets (text).
      */
     public List<String> getTweets(int max) {
@@ -110,4 +116,4 @@ public class TwitterUtil {
     }
 
 
- }
+}
